@@ -200,10 +200,10 @@ main (int argc, char *argv[])
     
   Time::SetResolution (Time::NS);
 //   Packet::EnablePrinting ();
-  LogComponentEnable ("HomaL4ProtocolPaperReproduction", LOG_LEVEL_ALL);  
-  LogComponentEnable ("MsgGeneratorApp", LOG_LEVEL_DEBUG);  
-  LogComponentEnable ("HomaSocket", LOG_LEVEL_DEBUG);
-  LogComponentEnable ("HomaL4Protocol", LOG_LEVEL_DEBUG);
+  LogComponentEnable ("HomaL4ProtocolPaperReproduction", LOG_LEVEL_DEBUG);  
+  LogComponentEnable ("MsgGeneratorApp", LOG_LEVEL_WARN);  
+  LogComponentEnable ("HomaSocket", LOG_LEVEL_WARN);
+  LogComponentEnable ("HomaL4Protocol", LOG_LEVEL_WARN);
     
   std::string msgSizeDistFileName ("inputs/homa-paper-reproduction/DCTCP-MsgSizeDist.txt");
   std::string tracesFileName ("outputs/homa-paper-reproduction/MsgTraces");
@@ -376,7 +376,7 @@ main (int argc, char *argv[])
   Config::SetDefault("ns3::MsgGeneratorApp::PayloadSize", 
                      UintegerValue(payloadSize));
   
-  for (int i = 0; i < 1; i++) // Set workload for only one host
+  for (int i = 0; i < 2; i++) // Set workload for two hosts
   // for (int i = 0; i < nHosts; i++)
   {
     Ptr<MsgGeneratorApp> app = CreateObject<MsgGeneratorApp>(hostTorIfs[i].GetAddress (0),
