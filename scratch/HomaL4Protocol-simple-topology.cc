@@ -225,7 +225,7 @@ main (int argc, char *argv[])
      h1 h2 h3 h4  h5 h6 h7 h8
   */
   int nHosts = 8;
-  int nTors = 3;
+  int nTors = 2;
   int nSpines = 1;
   
   /******** Create Nodes ********/
