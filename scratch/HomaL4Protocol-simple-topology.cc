@@ -376,14 +376,16 @@ main (int argc, char *argv[])
   Config::SetDefault("ns3::MsgGeneratorApp::PayloadSize", 
                      UintegerValue(payloadSize));
   
-  for (int i = 0; i < 2; i++) // Set workload for two hosts
-  // for (int i = 0; i < nHosts; i++)
+  for (int i = 0; i < 1; i++) // Set workload for two hosts
   {
     Ptr<MsgGeneratorApp> app = CreateObject<MsgGeneratorApp>(hostTorIfs[i].GetAddress (0),
                                                              1000 + i);
     app->Install (hostNodes.Get (i), clientAddresses);
     app->SetWorkload (networkLoad, msgSizeCDF, avgMsgSizePkts);
-      
+  }
+
+  for (int i = 0; i < nHosts; i++) // Config App for each host
+  {   
     app->Start(Seconds (3.0));
     app->Stop(Seconds (3.0 + duration));
   }
