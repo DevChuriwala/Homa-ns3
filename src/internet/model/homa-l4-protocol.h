@@ -108,6 +108,8 @@ public:
    * \return The number of packets required for full utilization, ie. BDP.
    */
   uint16_t GetBdp(void) const;
+  uint16_t GetBdpFromPort(uint16_t sport, uint16_t dport) const;
+  uint16_t GetBdpFromIP(Ipv4Address saddr, Ipv4Address daddr) const;
     
   /**
    * \brief Get the protocol number associated with Homa Transport.

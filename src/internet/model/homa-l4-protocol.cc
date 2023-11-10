@@ -160,13 +160,35 @@ HomaL4Protocol::GetMtu (void) const
 {
   return m_mtu;
 }
-    
+
 uint16_t 
 HomaL4Protocol::GetBdp(void) const
 {
   return m_bdp;
 }
-    
+
+uint16_t 
+HomaL4Protocol::GetBdpFromPort(uint16_t sport, uint16_t dport) const
+{
+  if ((sport == 1000 || sport == 1001 || sport == 1002 || sport == 1003) && 
+    (dport == 1000 || dport == 1001 || dport == 1002 || dport == 1003)) || ((sport == 1004 || sport == 1005 || sport == 1006 || sport == 1007) && 
+    (dport == 1004 || dport == 1005 || dport == 1006 || dport == 1007)) {
+    return 10;
+  } else {
+    return 20;
+  }
+}
+
+uint16_t 
+HomaL4Protocol::GetBdpFromIP(Ipv4Address saddr, Ipv4Address daddr) const
+{
+  if (((saddr >> 8) & 0xFF) <= 3 && ((daddr >> 8) & 0xFF <= 3)) || (((daddr >> 8) & 0xFF) >= 4 && ((daddr >> 8) & 0xFF >= 4)) {
+    return 10;
+  } else {
+    return 20;
+  }
+}
+
 int 
 HomaL4Protocol::GetProtocolNumber (void) const
 {
@@ -401,7 +423,7 @@ HomaL4Protocol::SendDown (Ptr<Packet> packet,
     uint32_t payloadSize = m_mtu - iph.GetSerializedSize () - homaHeader.GetSerializedSize ();
     uint32_t msgSizeBytes = homaHeader.GetMsgSize ();
     uint16_t msgSizePkts = msgSizeBytes / payloadSize + (msgSizeBytes % payloadSize != 0);
-    uint16_t remainingPkts = msgSizePkts - homaHeader.GetGrantOffset () - (uint16_t)1 + m_bdp; 
+    uint16_t remainingPkts = msgSizePkts - homaHeader.GetGrantOffset () - (uint16_t)1 + GetBdpFromIP(saddr, daddr); 
     m_dataSendTrace(packet, saddr, daddr, homaHeader.GetSrcPort (), 
                     homaHeader.GetDstPort (), homaHeader.GetTxMsgId (), 
                     homaHeader.GetPktOffset (), remainingPkts);
@@ -652,7 +674,7 @@ HomaOutboundMsg::HomaOutboundMsg (Ptr<Packet> message,
   } 
   NS_ASSERT(numPkts == m_msgSizeBytes / m_maxPayloadSize + (m_msgSizeBytes % m_maxPayloadSize != 0));
   
-  m_maxGrantedIdx = std::min((uint16_t)(m_homa->GetBdp () -1), numPkts);
+  m_maxGrantedIdx = std::min((uint16_t)(m_homa->GetBdpFromPort (sport, dport) -1), numPkts);
           
   // FIX: There is no timeout mechanism on the sender side for Homa 
   //      (even for garbage collection purposes), so removing the following
@@ -821,7 +843,7 @@ void HomaOutboundMsg::HandleGrantOffset (HomaHeader const &homaHeader)
      * Homa grants messages in a way that there is always exactly 1 BDP worth of 
      * packets on flight. Then we can calculate the remaining bytes as the following.
      */
-    m_remainingBytes = m_msgSizeBytes - (m_maxGrantedIdx+1 - m_homa->GetBdp ()) * m_maxPayloadSize;
+    m_remainingBytes = m_msgSizeBytes - (m_maxGrantedIdx+1 - m_homa-> GetBdpFromPort(homaHeader->GetSrcPort(), homaHeader->GetDstPort())) * m_maxPayloadSize;
   }
   else
   {
@@ -1654,7 +1676,7 @@ void HomaRecvScheduler::ReceiveDataPacket (Ptr<Packet> packet,
   else
   {
     inboundMsg = CreateObject<HomaInboundMsg> (cp, ipv4Header, homaHeader, interface, 
-                                               m_homa->GetMtu (), m_homa->GetBdp (), 
+                                               m_homa->GetMtu (), m_homa->GetBdpFromPort(homaHeader->GetSrcPort(), homaHeader->GetDstPort()), 
                                                m_homa->MemIsOptimized ());
     inboundMsg-> SetRtxEvent (Simulator::Schedule (m_homa->GetInboundRtxTimeout(), 
                                                    &HomaRecvScheduler::ExpireRtxTimeout, this, 
