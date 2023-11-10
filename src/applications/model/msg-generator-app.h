@@ -75,7 +75,7 @@ protected:
   virtual void DoDispose (void);
 private:
   // inherited from Application base class.
-  virtual void StartApplication (void, int HostId);    // Called at time specified by Start
+  virtual void StartApplication (int HostId);    // Called at time specified by Start
   virtual void StopApplication (void);     // Called at time specified by Stop
   
   //helpers
