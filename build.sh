@@ -9,4 +9,4 @@ sleep 0.3
 
 echo "\nRunning simple-test"
 sleep 0.3
-./waf --run scratch/HomaL4Protocol-simple-test
+./waf --run scratch/HomaL4Protocol-simple-topology
