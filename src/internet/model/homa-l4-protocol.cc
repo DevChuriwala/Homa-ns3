@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <cstdlib>
 
 #include "ns3/log.h"
 #include "ns3/assert.h"
@@ -170,13 +171,18 @@ HomaL4Protocol::GetBdp(void) const
 uint16_t 
 HomaL4Protocol::GetBdpFromPort(uint16_t sport, uint16_t dport) const
 {
+  int r = ((double) rand() / (RAND_MAX)) + 1;
   if (((sport == 1000 || sport == 1001 || sport == 1002 || sport == 1003) && 
     (dport == 1000 || dport == 1001 || dport == 1002 || dport == 1003)) || ((sport == 1004 || sport == 1005 || sport == 1006 || sport == 1007) && 
     (dport == 1004 || dport == 1005 || dport == 1006 || dport == 1007))) {
-    NS_LOG_WARN("GetBdpFromPort 10" << sport << " " << dport);
+    if (r > 0.9) {
+      NS_LOG_WARN("GetBdpFromPort RTT: 10, " << " sport: " << sport << " dport: " << dport);
+    }
     return 10;
   } else {
-    NS_LOG_WARN("GetBdpFromPort 20" << sport << " " << dport);
+    if (r > 0.9) {
+      NS_LOG_WARN("GetBdpFromPort RTT: 20, " << " sport: " << sport << " dport: " << dport);
+    }
     return 20;
   }
 }
@@ -186,13 +192,18 @@ HomaL4Protocol::GetBdpFromIP(uint32_t saddr, uint32_t daddr) const
 {
   uint8_t saddrThirdOctet = (saddr >> 8) & 0xFF;
   uint8_t daddrThirdOctet = (daddr >> 8) & 0xFF;
+  int r = ((double) rand() / (RAND_MAX)) + 1;
 
   // Check if in same switch (both <=3 or >=4)
   if ((saddrThirdOctet <= 3 && daddrThirdOctet <= 3) || (saddrThirdOctet >= 4 && daddrThirdOctet >= 4)) {
-    NS_LOG_WARN("GetBdpFromIP 10" << saddr << " " << daddr);
+    if (r > 0.9) {
+      NS_LOG_WARN("GetBdpFromIP RTT: 10, " << " saddr: " << saddr << " daddr: " << daddr);
+    }
     return 10;
    } else {
-    NS_LOG_WARN("GetBdpFromIP 20" << saddr << " " << daddr);
+    if (r > 0.9) {
+      NS_LOG_WARN("GetBdpFromIP RTT: 20, " << " saddr: " << saddr << " daddr: " << daddr);
+    }
     return 20;
   }
 }
