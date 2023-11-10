@@ -131,7 +131,7 @@ private:
    * This method should be overridden by all or most application
    * subclasses.
    */
-  virtual void StartApplication (void);
+  virtual void StartApplication (int HostId);
 
   /**
    * \brief Application specific shutdown code
@@ -143,7 +143,7 @@ private:
   virtual void StopApplication (void);
 protected:
   virtual void DoDispose (void);
-  virtual void DoInitialize (void);
+  virtual void DoInitialize (int HostId);
 
   Ptr<Node>       m_node;   //!< The node that this application is installed on
   Time m_startTime;         //!< The simulation time that the application will start

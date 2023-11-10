@@ -143,12 +143,12 @@ void MsgGeneratorApp::SetWorkload (double load,
   m_msgSizePkts->SetAttribute ("Max", DoubleValue (1));
 }
     
-void MsgGeneratorApp::Start (Time start)
+void MsgGeneratorApp::Start (Time start, int HostId = 0)
 {
   NS_LOG_FUNCTION (this);
     
   SetStartTime(start);
-  DoInitialize();
+  DoInitialize(HostId);
 }
     
 void MsgGeneratorApp::Stop (Time stop)
@@ -167,9 +167,11 @@ void MsgGeneratorApp::DoDispose (void)
   Application::DoDispose ();
 }
     
-void MsgGeneratorApp::StartApplication ()
+void MsgGeneratorApp::StartApplication (int hostId)
 {
   NS_LOG_FUNCTION (Simulator::Now ().GetNanoSeconds () << this);
+
+  if(hostId != 0) return;
     
   NS_ASSERT_MSG(m_remoteClient && m_interMsgTime && m_msgSizePkts,
                 "MsgGeneratorApp should be installed on a node and "

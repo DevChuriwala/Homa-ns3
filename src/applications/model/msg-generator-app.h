@@ -67,7 +67,7 @@ public:
                     std::map<double,int> msgSizeCDF, 
                     double avgMsgSizePkts);
                     
-  void Start (Time start);
+  void Start (Time start, int HostId);
   
   void Stop (Time stop);
 
@@ -75,7 +75,7 @@ protected:
   virtual void DoDispose (void);
 private:
   // inherited from Application base class.
-  virtual void StartApplication (void);    // Called at time specified by Start
+  virtual void StartApplication (void, int HostId);    // Called at time specified by Start
   virtual void StopApplication (void);     // Called at time specified by Stop
   
   //helpers

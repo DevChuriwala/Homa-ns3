@@ -90,10 +90,10 @@ Application::DoDispose (void)
 }
 
 void
-Application::DoInitialize (void)
+Application::DoInitialize (int HostId)
 {
   NS_LOG_FUNCTION (this);
-  m_startEvent = Simulator::Schedule (m_startTime, &Application::StartApplication, this);
+  m_startEvent = Simulator::Schedule (m_startTime, &Application::StartApplication, this, HostId);
   if (m_stopTime != TimeStep (0))
     {
       m_stopEvent = Simulator::Schedule (m_stopTime, &Application::StopApplication, this);
@@ -116,7 +116,7 @@ Application::SetNode (Ptr<Node> node)
 
 // Protected methods
 // StartApp and StopApp will likely be overridden by application subclasses
-void Application::StartApplication ()
+void Application::StartApplication (int HostId)
 { // Provide null functionality in case subclass is not interested
   NS_LOG_FUNCTION (this);
 }

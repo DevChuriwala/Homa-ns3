@@ -382,7 +382,7 @@ main (int argc, char *argv[])
                                                              1000 + i);
     app->Install (hostNodes.Get (i), clientAddresses);
     app->SetWorkload (networkLoad, msgSizeCDF, avgMsgSizePkts);
-    app->Start(Seconds (3.0));
+    app->Start(Seconds (3.0), i);
     app->Stop(Seconds (3.0 + duration));
   }
       
