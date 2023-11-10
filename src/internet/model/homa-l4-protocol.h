@@ -109,7 +109,7 @@ public:
    */
   uint16_t GetBdp(void) const;
   uint16_t GetBdpFromPort(uint16_t sport, uint16_t dport) const;
-  uint16_t GetBdpFromIP(Ipv4Address saddr, Ipv4Address daddr) const;
+  uint16_t GetBdpFromIP(uint32_t saddr, uint32_t daddr) const;
     
   /**
    * \brief Get the protocol number associated with Homa Transport.

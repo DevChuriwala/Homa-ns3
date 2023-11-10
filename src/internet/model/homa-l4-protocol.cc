@@ -170,9 +170,9 @@ HomaL4Protocol::GetBdp(void) const
 uint16_t 
 HomaL4Protocol::GetBdpFromPort(uint16_t sport, uint16_t dport) const
 {
-  if ((sport == 1000 || sport == 1001 || sport == 1002 || sport == 1003) && 
+  if (((sport == 1000 || sport == 1001 || sport == 1002 || sport == 1003) && 
     (dport == 1000 || dport == 1001 || dport == 1002 || dport == 1003)) || ((sport == 1004 || sport == 1005 || sport == 1006 || sport == 1007) && 
-    (dport == 1004 || dport == 1005 || dport == 1006 || dport == 1007)) {
+    (dport == 1004 || dport == 1005 || dport == 1006 || dport == 1007))) {
     return 10;
   } else {
     return 20;
@@ -180,7 +180,7 @@ HomaL4Protocol::GetBdpFromPort(uint16_t sport, uint16_t dport) const
 }
 
 uint16_t 
-HomaL4Protocol::GetBdpFromIP(Ipv4Address saddr, Ipv4Address daddr) const
+HomaL4Protocol::GetBdpFromIP(uint32_t saddr, uint32_t daddr) const
 {
   if (((saddr >> 8) & 0xFF) <= 3 && ((daddr >> 8) & 0xFF <= 3)) || (((daddr >> 8) & 0xFF) >= 4 && ((daddr >> 8) & 0xFF >= 4)) {
     return 10;
@@ -423,7 +423,7 @@ HomaL4Protocol::SendDown (Ptr<Packet> packet,
     uint32_t payloadSize = m_mtu - iph.GetSerializedSize () - homaHeader.GetSerializedSize ();
     uint32_t msgSizeBytes = homaHeader.GetMsgSize ();
     uint16_t msgSizePkts = msgSizeBytes / payloadSize + (msgSizeBytes % payloadSize != 0);
-    uint16_t remainingPkts = msgSizePkts - homaHeader.GetGrantOffset () - (uint16_t)1 + GetBdpFromIP(saddr, daddr); 
+    uint16_t remainingPkts = msgSizePkts - homaHeader.GetGrantOffset () - (uint16_t)1 + GetBdpFromIP(saddr.Get(), daddr.Get()); 
     m_dataSendTrace(packet, saddr, daddr, homaHeader.GetSrcPort (), 
                     homaHeader.GetDstPort (), homaHeader.GetTxMsgId (), 
                     homaHeader.GetPktOffset (), remainingPkts);
