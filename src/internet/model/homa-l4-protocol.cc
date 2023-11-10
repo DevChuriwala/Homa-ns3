@@ -182,9 +182,13 @@ HomaL4Protocol::GetBdpFromPort(uint16_t sport, uint16_t dport) const
 uint16_t 
 HomaL4Protocol::GetBdpFromIP(uint32_t saddr, uint32_t daddr) const
 {
-  if (((saddr >> 8) & 0xFF) <= 3 && ((daddr >> 8) & 0xFF <= 3)) || (((daddr >> 8) & 0xFF) >= 4 && ((daddr >> 8) & 0xFF >= 4)) {
+  uint8_t saddrThirdOctet = (saddr >> 8) & 0xFF;
+  uint8_t daddrThirdOctet = (daddr >> 8) & 0xFF;
+
+  // Check if in same switch (both <=3 or >=4)
+  if ((saddrThirdOctet <= 3 && daddrThirdOctet <= 3) || (saddrThirdOctet >= 4 && daddrThirdOctet >= 4)) {
     return 10;
-  } else {
+   } else {
     return 20;
   }
 }
@@ -843,7 +847,7 @@ void HomaOutboundMsg::HandleGrantOffset (HomaHeader const &homaHeader)
      * Homa grants messages in a way that there is always exactly 1 BDP worth of 
      * packets on flight. Then we can calculate the remaining bytes as the following.
      */
-    m_remainingBytes = m_msgSizeBytes - (m_maxGrantedIdx+1 - m_homa-> GetBdpFromPort(homaHeader->GetSrcPort(), homaHeader->GetDstPort())) * m_maxPayloadSize;
+    m_remainingBytes = m_msgSizeBytes - (m_maxGrantedIdx+1 - m_homa-> GetBdpFromPort(homaHeader.GetSrcPort(), homaHeader.GetDstPort())) * m_maxPayloadSize;
   }
   else
   {
