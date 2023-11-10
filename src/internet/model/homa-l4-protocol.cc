@@ -1680,7 +1680,7 @@ void HomaRecvScheduler::ReceiveDataPacket (Ptr<Packet> packet,
   else
   {
     inboundMsg = CreateObject<HomaInboundMsg> (cp, ipv4Header, homaHeader, interface, 
-                                               m_homa->GetMtu (), m_homa->GetBdpFromPort(homaHeader->GetSrcPort(), homaHeader->GetDstPort()), 
+                                               m_homa->GetMtu (), m_homa->GetBdpFromPort(homaHeader.GetSrcPort(), homaHeader.GetDstPort()), 
                                                m_homa->MemIsOptimized ());
     inboundMsg-> SetRtxEvent (Simulator::Schedule (m_homa->GetInboundRtxTimeout(), 
                                                    &HomaRecvScheduler::ExpireRtxTimeout, this, 
