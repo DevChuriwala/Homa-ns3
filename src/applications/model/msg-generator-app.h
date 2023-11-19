@@ -98,7 +98,7 @@ private:
    * \brief Send a message
    */
   void SendMessage ();
-  
+  void SendMessagesToAll ();
   /**
    * \brief Receive a message from the protocol socket
    */

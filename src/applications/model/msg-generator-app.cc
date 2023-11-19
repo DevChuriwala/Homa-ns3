@@ -166,12 +166,12 @@ void MsgGeneratorApp::DoDispose (void)
   // chain up
   Application::DoDispose ();
 }
-    
+
 void MsgGeneratorApp::StartApplication (int hostId)
 {
   NS_LOG_FUNCTION (Simulator::Now ().GetNanoSeconds () << this);
 
-  if(hostId != 0) return;
+  // if(hostId != 0) return;
     
   NS_ASSERT_MSG(m_remoteClient && m_interMsgTime && m_msgSizePkts,
                 "MsgGeneratorApp should be installed on a node and "
@@ -270,7 +270,34 @@ void MsgGeneratorApp::SendMessage ()
     ScheduleNextMessage ();
   }
 }
-    
+
+void MsgGeneratorApp::SendMessagesToAll ()
+{
+  NS_LOG_FUNCTION (Simulator::Now ().GetNanoSeconds () << this);
+
+  double startId = m_remoteClient->GetMin();
+  double endId = m_remoteClient->GetMax();
+
+  for (double remoteCliendId = startId; remoteCliendId <= endId; remoteCliendId++) {
+    InetSocketAddress receiverAddr = m_remoteClients[remoteCliendId];
+
+    uint32_t msgSizeBytes = 900;
+    /* Create the message to send */
+    Ptr<Packet> msg = Create<Packet> (msgSizeBytes);
+
+    NS_LOG_LOGIC ("MsgGeneratorApp SendMessagesToAll {" << this << ") generates a message of size: "
+                << msgSizeBytes << " Bytes.");
+
+    int sentBytes = m_socket->SendTo (msg, 0, receiverAddr);
+   
+    if (sentBytes > 0)
+    {
+      NS_LOG_INFO("SendMessagesToAll " << sentBytes << " Bytes sent to " << receiverAddr);
+    }
+  }
+  
+}
+
 void MsgGeneratorApp::ReceiveMessage (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this);
