@@ -429,11 +429,15 @@ HomaL4Protocol::SendDown (Ptr<Packet> packet,
     uint32_t msgSizeBytes = homaHeader.GetMsgSize ();
     uint16_t msgSizePkts = msgSizeBytes / payloadSize + (msgSizeBytes % payloadSize != 0);
     uint16_t remainingPkts = msgSizePkts - homaHeader.GetGrantOffset () - (uint16_t)1 + GetBdpFromIP(saddr.Get(), daddr.Get());
+    NS_LOG_WARN("SendDown + " << this->GetObject<Ipv4> ()->GetAddress(1, 0) <<" " << Simulator::Now ().GetNanoSeconds () 
+      << " " << saddr << ":" << " "  << daddr << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ());
     m_dataSendTrace(packet, saddr, daddr, homaHeader.GetSrcPort (), 
                     homaHeader.GetDstPort (), homaHeader.GetTxMsgId (), 
                     homaHeader.GetPktOffset (), remainingPkts);
   }
-   
+
+  NS_LOG_WARN("SendDown2 + " << this->GetObject<Ipv4> ()->GetAddress(1, 0) <<" " << Simulator::Now ().GetNanoSeconds () 
+      << " " << saddr << ":" << " "  << daddr << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ()); 
   m_downTarget (packet, saddr, daddr, PROT_NUMBER, route);
 }
     
@@ -506,17 +510,21 @@ HomaL4Protocol::Receive (Ptr<Packet> packet,
     return IpL4Protocol::RX_ENDPOINT_UNREACH;
   }
 
-  if (rxFlag & HomaHeader::Flags_t::DATA)
+  if (rxFlag & HomaHeader::Flags_t::DATA) {
     m_dataRecvTrace(cp, header.GetSource (), header.GetDestination (), 
                     homaHeader.GetSrcPort (), homaHeader.GetDstPort (), 
                     homaHeader.GetTxMsgId (), homaHeader.GetPktOffset (), 
                     homaHeader.GetPrio ());
-  else
+    NS_LOG_WARN("Receive - " << this->GetObject<Ipv4> ()->GetAddress(1, 0) << " " << Simulator::Now ().GetNanoSeconds () 
+      << " " << header.GetSource () << ":" << " "  << header.GetDestination () << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ());
+  } else {
+     NS_LOG_WARN("Receive2 - " << this->GetObject<Ipv4> ()->GetAddress(1, 0) << " " << Simulator::Now ().GetNanoSeconds () 
+      << " " << header.GetSource () << ":" << " "  << header.GetDestination () << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ());
     m_ctrlRecvTrace(cp, header.GetSource (), header.GetDestination (), 
                     homaHeader.GetSrcPort (), homaHeader.GetDstPort (), 
                     homaHeader.GetFlags (), homaHeader.GetGrantOffset(), 
                     homaHeader.GetPrio());
-                    
+  }
   return IpL4Protocol::RX_OK;
 }
     

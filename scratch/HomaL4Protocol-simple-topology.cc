@@ -200,7 +200,7 @@ main (int argc, char *argv[])
     
   Time::SetResolution (Time::NS);
 //   Packet::EnablePrinting ();
-  LogComponentEnable ("HomaL4ProtocolPaperReproduction", LOG_LEVEL_DEBUG);  
+  LogComponentEnable ("HomaL4ProtocolPaperReproduction", LOG_LEVEL_WARN);  
   LogComponentEnable ("MsgGeneratorApp", LOG_LEVEL_WARN);  
   LogComponentEnable ("HomaSocket", LOG_LEVEL_WARN);
   LogComponentEnable ("HomaL4Protocol", LOG_LEVEL_WARN);
