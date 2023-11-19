@@ -135,7 +135,7 @@ HomaL4Protocol::~HomaL4Protocol ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
-    
+ 
 void 
 HomaL4Protocol::SetNode (Ptr<Node> node)
 {
@@ -171,19 +171,12 @@ HomaL4Protocol::GetBdp(void) const
 uint16_t 
 HomaL4Protocol::GetBdpFromPort(uint16_t sport, uint16_t dport) const
 {
-  int r = ((double) rand() / (RAND_MAX)) + 1;
   if (((sport == 1000 || sport == 1001 || sport == 1002 || sport == 1003) && 
     (dport == 1000 || dport == 1001 || dport == 1002 || dport == 1003)) || ((sport == 1004 || sport == 1005 || sport == 1006 || sport == 1007) && 
     (dport == 1004 || dport == 1005 || dport == 1006 || dport == 1007))) {
-    if (r > 0.9) {
-      NS_LOG_WARN("GetBdpFromPort RTT: 10, " << " sport: " << sport << " dport: " << dport);
-    }
-    return 10;
+    return 7;
   } else {
-    if (r > 0.9) {
-      NS_LOG_WARN("GetBdpFromPort RTT: 20, " << " sport: " << sport << " dport: " << dport);
-    }
-    return 20;
+    return 9;
   }
 }
 
@@ -192,19 +185,12 @@ HomaL4Protocol::GetBdpFromIP(uint32_t saddr, uint32_t daddr) const
 {
   uint8_t saddrThirdOctet = (saddr >> 8) & 0xFF;
   uint8_t daddrThirdOctet = (daddr >> 8) & 0xFF;
-  int r = ((double) rand() / (RAND_MAX)) + 1;
 
   // Check if in same switch (both <=3 or >=4)
   if ((saddrThirdOctet <= 3 && daddrThirdOctet <= 3) || (saddrThirdOctet >= 4 && daddrThirdOctet >= 4)) {
-    if (r > 0.9) {
-      NS_LOG_WARN("GetBdpFromIP RTT: 10, " << " saddr: " << saddr << " daddr: " << daddr);
-    }
-    return 10;
+    return 7;
    } else {
-    if (r > 0.9) {
-      NS_LOG_WARN("GetBdpFromIP RTT: 20, " << " saddr: " << saddr << " daddr: " << daddr);
-    }
-    return 20;
+    return 9;
   }
 }
 
@@ -442,7 +428,7 @@ HomaL4Protocol::SendDown (Ptr<Packet> packet,
     uint32_t payloadSize = m_mtu - iph.GetSerializedSize () - homaHeader.GetSerializedSize ();
     uint32_t msgSizeBytes = homaHeader.GetMsgSize ();
     uint16_t msgSizePkts = msgSizeBytes / payloadSize + (msgSizeBytes % payloadSize != 0);
-    uint16_t remainingPkts = msgSizePkts - homaHeader.GetGrantOffset () - (uint16_t)1 + GetBdpFromIP(saddr.Get(), daddr.Get()); 
+    uint16_t remainingPkts = msgSizePkts - homaHeader.GetGrantOffset () - (uint16_t)1 + GetBdpFromIP(saddr.Get(), daddr.Get());
     m_dataSendTrace(packet, saddr, daddr, homaHeader.GetSrcPort (), 
                     homaHeader.GetDstPort (), homaHeader.GetTxMsgId (), 
                     homaHeader.GetPktOffset (), remainingPkts);
@@ -519,7 +505,7 @@ HomaL4Protocol::Receive (Ptr<Packet> packet,
                  << homaHeader.FlagsToString(rxFlag));
     return IpL4Protocol::RX_ENDPOINT_UNREACH;
   }
-    
+
   if (rxFlag & HomaHeader::Flags_t::DATA)
     m_dataRecvTrace(cp, header.GetSource (), header.GetDestination (), 
                     homaHeader.GetSrcPort (), homaHeader.GetDstPort (), 
@@ -530,7 +516,7 @@ HomaL4Protocol::Receive (Ptr<Packet> packet,
                     homaHeader.GetSrcPort (), homaHeader.GetDstPort (), 
                     homaHeader.GetFlags (), homaHeader.GetGrantOffset(), 
                     homaHeader.GetPrio());
-    
+                    
   return IpL4Protocol::RX_OK;
 }
     
