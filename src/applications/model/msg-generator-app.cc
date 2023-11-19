@@ -177,7 +177,10 @@ void MsgGeneratorApp::StartApplication (int hostId)
                 "MsgGeneratorApp should be installed on a node and "
                 "the workload should be set before starting the application!");
     
-  ScheduleNextMessage ();
+  if (hostId == 0)
+  {
+    ScheduleNextMessageToAll ();
+  }
 }
     
 void MsgGeneratorApp::StopApplication ()
@@ -210,7 +213,23 @@ void MsgGeneratorApp::ScheduleNextMessage ()
                 ") tries to schedule the next msg before the previous one is sent!");
   }
 }
+  
+void MsgGeneratorApp::ScheduleNextMessageToAll ()
+{
+  NS_LOG_FUNCTION (Simulator::Now ().GetNanoSeconds () << this);
     
+  if (Simulator::IsExpired(m_nextSendEvent))
+  {
+    m_nextSendEvent = Simulator::Schedule (Seconds (m_interMsgTime->GetValue ()),
+                                           &MsgGeneratorApp::SendMessagesToAll, this);
+  }
+  else
+  {
+    NS_LOG_WARN("MsgGeneratorApp (" << this <<
+                ") tries to schedule the next msg before the previous one is sent!");
+  }
+}
+
 uint32_t MsgGeneratorApp::GetNextMsgSizeFromDist ()
 {
   NS_LOG_FUNCTION(this);
@@ -274,28 +293,29 @@ void MsgGeneratorApp::SendMessage ()
 void MsgGeneratorApp::SendMessagesToAll ()
 {
   NS_LOG_FUNCTION (Simulator::Now ().GetNanoSeconds () << this);
+  static double id = m_remoteClient->GetMin();
+  double endId = m_remoteClient->GetMax() - 1;
 
-  double startId = m_remoteClient->GetMin();
-  double endId = m_remoteClient->GetMax();
+  InetSocketAddress receiverAddr = m_remoteClients[id];
+  uint32_t msgSizeBytes = 900;
+  // Create the message to send
+  Ptr<Packet> msg = Create<Packet> (msgSizeBytes);
 
-  for (double remoteCliendId = startId; remoteCliendId <= endId; remoteCliendId++) {
-    InetSocketAddress receiverAddr = m_remoteClients[remoteCliendId];
-
-    uint32_t msgSizeBytes = 900;
-    /* Create the message to send */
-    Ptr<Packet> msg = Create<Packet> (msgSizeBytes);
-
-    NS_LOG_LOGIC ("MsgGeneratorApp SendMessagesToAll {" << this << ") generates a message of size: "
+  NS_LOG_LOGIC ("MsgGeneratorApp SendMessagesToAll {" << this << ") generates a message of size: "
                 << msgSizeBytes << " Bytes.");
 
-    int sentBytes = m_socket->SendTo (msg, 0, receiverAddr);
-   
-    if (sentBytes > 0)
-    {
-      NS_LOG_INFO("SendMessagesToAll " << sentBytes << " Bytes sent to " << receiverAddr);
-    }
+  int sentBytes = m_socket->SendTo (msg, 0, receiverAddr);
+  if (sentBytes > 0)
+  {
+    NS_LOG_INFO("SendMessagesToAll " << sentBytes << " Bytes sent to " << receiverAddr);
   }
-  
+
+  if (id < endId) {
+    id = id + 1;
+    ScheduleNextMessageToAll ();
+  } else {
+    ScheduleNextMessage ();
+  }
 }
 
 void MsgGeneratorApp::ReceiveMessage (Ptr<Socket> socket)

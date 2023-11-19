@@ -88,6 +88,7 @@ private:
    * \brief Schedule the next message to send.
    */
   void ScheduleNextMessage ();
+  void ScheduleNextMessageToAll ();
   
   /**
    * \brief Determine the next msg size in bytes based on the set workload
