@@ -515,7 +515,7 @@ HomaL4Protocol::Receive (Ptr<Packet> packet,
                     homaHeader.GetSrcPort (), homaHeader.GetDstPort (), 
                     homaHeader.GetTxMsgId (), homaHeader.GetPktOffset (), 
                     homaHeader.GetPrio ());
-    NS_LOG_WARN("Receive - " << this->GetObject<Ipv4> ()->GetAddress(1, 0) << " " << Simulator::Now ().GetNanoSeconds () 
+    NS_LOG_WARN("Receive - "<< "time: "<< homaHeader.GetTime() << " " << this->GetObject<Ipv4> ()->GetAddress(1, 0) << " " << Simulator::Now ().GetNanoSeconds () 
       << " " << header.GetSource () << ":" << " "  << header.GetDestination () << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ());
   } else {
      NS_LOG_WARN("Receive2 - " << this->GetObject<Ipv4> ()->GetAddress(1, 0) << " " << Simulator::Now ().GetNanoSeconds () 
@@ -1108,6 +1108,7 @@ bool HomaSendScheduler::GetNextPktOfMsg (uint16_t txMsgId, Ptr<Packet> &p)
     p = candidateMsg->RemoveNextPktFromTxQ(pktOffset);
       
     HomaHeader homaHeader;
+    homaHeader.SetTime((uint64_t) Simulator::Now ().GetNanoSeconds ());
     homaHeader.SetDstPort (candidateMsg->GetDstPort ());
     homaHeader.SetSrcPort (candidateMsg->GetSrcPort ());
     homaHeader.SetTxMsgId (txMsgId);

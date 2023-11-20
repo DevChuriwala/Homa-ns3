@@ -307,7 +307,7 @@ protected:
    * protocol of layer 4 protocol stack to connect them together.
    */
   virtual void NotifyNewAggregate ();
-    
+  
 private:
   Ptr<Node> m_node; //!< the node this stack is associated with
   Ipv4EndPointDemux *m_endPoints; //!< A list of IPv4 end points.

@@ -31,6 +31,7 @@
 #include "ns3/udp-socket-factory.h"
 #include "ns3/homa-socket-factory.h"
 #include "ns3/point-to-point-net-device.h"
+#include <stdlib.h>
 
 namespace ns3 {
 
@@ -297,7 +298,7 @@ void MsgGeneratorApp::SendMessagesToAll ()
   double endId = m_remoteClient->GetMax() - 1;
 
   InetSocketAddress receiverAddr = m_remoteClients[id];
-  uint32_t msgSizeBytes = 900;
+  uint32_t msgSizeBytes = 4;
   // Create the message to send
   Ptr<Packet> msg = Create<Packet> (msgSizeBytes);
 
