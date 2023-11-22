@@ -182,7 +182,7 @@ HomaL4Protocol::GetBdpFromPort(uint16_t sport, uint16_t dport) const
   int distance = abs(sourceSwitch - destSwitch);
 
   // Assign BDP based on distance
-  return 7 + (distance * 2)
+  return 7 + (distance * 2);
 }
 
 uint16_t 
@@ -196,7 +196,7 @@ HomaL4Protocol::GetBdpFromIP(uint32_t saddr, uint32_t daddr) const
   int distance = abs(sourceSwitch - destSwitch);
 
   // Assign BDP based on distance
-  return 7 + (distance * 2)
+  return 7 + (distance * 2);
 }
 
 
