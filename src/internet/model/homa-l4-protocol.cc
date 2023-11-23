@@ -256,7 +256,8 @@ HomaL4Protocol::CalculateRTTPackets(uint64_t timestamp, uint16_t srcPort, uint16
 
   uint64_t currentTime = (uint64_t) Simulator::Now ().GetNanoSeconds ();
   uint64_t timeDifference = currentTime - timestamp;
-  uint16_t packets = (int) timeDifference*7*2/(700);
+  /* RTT packets */
+  uint16_t packets = (int) timeDifference*2/(1460); // 1460 bytes in each packet
   NS_LOG_WARN("Adding this into map: Src port "<< srcPort<< " dst port: "<< dstPort <<" packets: "<<packets);
   portMap[portPair] = packets;
   ipMap[ipPair] = packets;
