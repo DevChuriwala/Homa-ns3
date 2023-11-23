@@ -40,6 +40,29 @@
 #include "homa-socket-factory.h"
 #include "homa-socket.h"
 
+#include <unordered_map>
+#include <utility>
+
+// A hash function used to hash a pair of any kind
+struct hash_pair {
+    template <class T1, class T2>
+    size_t operator()(const std::pair<T1, T2>& p) const
+    {
+        auto hash1 = std::hash<T1>{}(p.first);
+        auto hash2 = std::hash<T2>{}(p.second);
+ 
+        if (hash1 != hash2) {
+            return hash1 ^ hash2;              
+        }
+         
+        // If hash1 == hash2, their XOR is zero.
+          return hash1;
+    }
+};
+
+std::unordered_map<std::pair<uint16_t, uint16_t>, uint16_t, hash_pair> portMap;
+std::unordered_map<std::pair<uint32_t, uint32_t>, uint16_t, hash_pair> ipMap;
+
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("HomaL4Protocol");
@@ -171,18 +194,30 @@ HomaL4Protocol::GetBdp(void) const
 uint16_t 
 HomaL4Protocol::GetBdpFromPort(uint16_t sport, uint16_t dport) const
 {
+  /*
   if (((sport == 1000 || sport == 1001 || sport == 1002 || sport == 1003) && 
     (dport == 1000 || dport == 1001 || dport == 1002 || dport == 1003)) || ((sport == 1004 || sport == 1005 || sport == 1006 || sport == 1007) && 
     (dport == 1004 || dport == 1005 || dport == 1006 || dport == 1007))) {
     return 7;
   } else {
     return 9;
+  }*/
+  std::pair<uint16_t, uint16_t> portPair;
+  portPair.first = sport;
+  portPair.second = dport;
+  if (portMap.find(portPair) != portMap.end()) {
+    NS_LOG_WARN("Src port: "<< sport <<" :Dst port "<< dport << " value: "<< portMap[portPair]);
+    return portMap[portPair];
+  } else {
+    NS_LOG_WARN("Src port: "<< sport <<" :Dst port "<< dport << " value: 7");
+    return 7;
   }
 }
 
 uint16_t 
 HomaL4Protocol::GetBdpFromIP(uint32_t saddr, uint32_t daddr) const
 {
+    /*
   uint8_t saddrThirdOctet = (saddr >> 8) & 0xFF;
   uint8_t daddrThirdOctet = (daddr >> 8) & 0xFF;
 
@@ -192,7 +227,43 @@ HomaL4Protocol::GetBdpFromIP(uint32_t saddr, uint32_t daddr) const
    } else {
     return 9;
   }
+  */
+  std::pair<uint32_t, uint32_t> ipPair;
+  ipPair.first = saddr;
+  ipPair.second = daddr;
+  if (ipMap.find(ipPair) != ipMap.end()) {
+    NS_LOG_WARN("Src addr: "<< saddr <<" :Dst addr "<< daddr << " value: "<< ipMap[ipPair]);
+    return ipMap[ipPair];
+  } else {
+    NS_LOG_WARN("Src addr: "<< saddr <<" :Dst addr "<< daddr << " value: 7");
+    return 7;
+  }
 }
+
+uint16_t
+HomaL4Protocol::CalculateRTTPackets(uint64_t timestamp, uint16_t srcPort, uint16_t dstPort, uint32_t srcAddr, uint32_t dstAddr) const
+{
+  std::pair<uint16_t, uint16_t> portPair;
+  std::pair<uint32_t, uint32_t> ipPair;
+  portPair.first = srcPort;
+  portPair.second = dstPort;
+  ipPair.first = srcAddr;
+  ipPair.second = dstAddr;
+
+  if (portMap.find(portPair) != portMap.end()) {
+    return 0;
+  }
+
+  uint64_t currentTime = (uint64_t) Simulator::Now ().GetNanoSeconds ();
+  uint64_t timeDifference = currentTime - timestamp;
+  uint16_t packets = (int) timeDifference*7*2/(700);
+  NS_LOG_WARN("Adding this into map: Src port "<< srcPort<< " dst port: "<< dstPort <<" packets: "<<packets);
+  portMap[portPair] = packets;
+  ipMap[ipPair] = packets;
+
+  return packets;
+}
+
 
 int 
 HomaL4Protocol::GetProtocolNumber (void) const
@@ -515,6 +586,8 @@ HomaL4Protocol::Receive (Ptr<Packet> packet,
                     homaHeader.GetSrcPort (), homaHeader.GetDstPort (), 
                     homaHeader.GetTxMsgId (), homaHeader.GetPktOffset (), 
                     homaHeader.GetPrio ());
+    CalculateRTTPackets(homaHeader.GetTime(), homaHeader.GetSrcPort (), homaHeader.GetDstPort ()
+    , header.GetSource().Get(), header.GetDestination().Get());
     NS_LOG_WARN("Receive - "<< "time: "<< homaHeader.GetTime() << " " << this->GetObject<Ipv4> ()->GetAddress(1, 0) << " " << Simulator::Now ().GetNanoSeconds () 
       << " " << header.GetSource () << ":" << " "  << header.GetDestination () << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ());
   } else {

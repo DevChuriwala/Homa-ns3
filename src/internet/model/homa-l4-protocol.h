@@ -110,7 +110,9 @@ public:
   uint16_t GetBdp(void) const;
   uint16_t GetBdpFromPort(uint16_t sport, uint16_t dport) const;
   uint16_t GetBdpFromIP(uint32_t saddr, uint32_t daddr) const;
-    
+  
+  uint16_t CalculateRTTPackets(uint64_t timestamp, uint16_t srcPort, uint16_t dstPort, uint32_t srcAddr, uint32_t dstAddr) const;
+  
   /**
    * \brief Get the protocol number associated with Homa Transport.
    * \return The protocol identifier of Homa used in IP headers.
