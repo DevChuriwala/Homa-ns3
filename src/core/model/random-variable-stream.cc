@@ -156,6 +156,10 @@ UniformRandomVariable::GetTypeId (void)
                    DoubleValue (1.0),
                    MakeDoubleAccessor (&UniformRandomVariable::m_max),
                    MakeDoubleChecker<double>())
+    .AddAttribute("ClientToSendNext", "store id of the client for which we need to send the next request ",
+                   DoubleValue (1.0),
+                   MakeDoubleAccessor (&UniformRandomVariable::m_clientToSendNext),
+                   MakeDoubleChecker<double>())
   ;
   return tid;
 }
@@ -176,6 +180,21 @@ UniformRandomVariable::GetMax (void) const
 {
   NS_LOG_FUNCTION (this);
   return m_max;
+}
+
+double
+UniformRandomVariable::GetNextClientId (void)
+{
+  NS_LOG_FUNCTION (this);
+  return m_clientToSendNext;
+}
+
+double
+UniformRandomVariable::IncrementNextClientId (void)
+{
+  NS_LOG_FUNCTION (this);
+  m_clientToSendNext = m_clientToSendNext + 1;
+  return m_clientToSendNext;
 }
 
 double

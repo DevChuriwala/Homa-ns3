@@ -234,6 +234,9 @@ private:
 class UniformRandomVariable : public RandomVariableStream
 {
 public:
+  double GetNextClientId (void);
+  double IncrementNextClientId (void);
+
   /**
    * \brief Register this type.
    * \return The object TypeId.
@@ -302,6 +305,8 @@ private:
   /** The upper bound on values that can be returned by this RNG stream. */
   double m_max;
 
+  /* store id of the client for which we need to send the next request */
+  double m_clientToSendNext;
 };  // class UniformRandomVariable
 
 

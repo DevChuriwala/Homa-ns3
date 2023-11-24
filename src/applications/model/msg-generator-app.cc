@@ -115,6 +115,7 @@ void MsgGeneratorApp::Install (Ptr<Node> node,
   m_remoteClient = CreateObject<UniformRandomVariable> ();
   m_remoteClient->SetAttribute ("Min", DoubleValue (0));
   m_remoteClient->SetAttribute ("Max", DoubleValue (m_remoteClients.size()));
+  m_remoteClient->SetAttribute("ClientToSendNext", DoubleValue (0));
 }
     
 void MsgGeneratorApp::SetWorkload (double load, 
@@ -177,11 +178,8 @@ void MsgGeneratorApp::StartApplication (int hostId)
   NS_ASSERT_MSG(m_remoteClient && m_interMsgTime && m_msgSizePkts,
                 "MsgGeneratorApp should be installed on a node and "
                 "the workload should be set before starting the application!");
-    
-  if (hostId == 0)
-  {
-    ScheduleNextMessageToAll ();
-  }
+
+  ScheduleNextMessageToAll ();
 }
     
 void MsgGeneratorApp::StopApplication ()
@@ -294,11 +292,15 @@ void MsgGeneratorApp::SendMessage ()
 void MsgGeneratorApp::SendMessagesToAll ()
 {
   NS_LOG_FUNCTION (Simulator::Now ().GetNanoSeconds () << this);
-  static double id = m_remoteClient->GetMin();
+  double id = m_remoteClient->GetNextClientId();
   double endId = m_remoteClient->GetMax() - 1;
 
+  if (id >= endId) {
+    ScheduleNextMessage ();
+  }
+
   InetSocketAddress receiverAddr = m_remoteClients[id];
-  uint32_t msgSizeBytes = 4;
+  uint32_t msgSizeBytes = 10;
   // Create the message to send
   Ptr<Packet> msg = Create<Packet> (msgSizeBytes);
 
@@ -310,13 +312,8 @@ void MsgGeneratorApp::SendMessagesToAll ()
   {
     NS_LOG_INFO("SendMessagesToAll " << sentBytes << " Bytes sent to " << receiverAddr);
   }
-
-  if (id < endId) {
-    id = id + 1;
-    ScheduleNextMessageToAll ();
-  } else {
-    ScheduleNextMessage ();
-  }
+  m_remoteClient->IncrementNextClientId();
+  ScheduleNextMessageToAll ();
 }
 
 void MsgGeneratorApp::ReceiveMessage (Ptr<Socket> socket)
