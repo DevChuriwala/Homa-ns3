@@ -189,8 +189,8 @@ uint16_t
 HomaL4Protocol::GetBdpFromIP(uint32_t saddr, uint32_t daddr) const
 {
   // Calculate switch indices based on the third octet of IPs
-  int sourceSwitch = ((saddr >> 8) & 0xFF) % 9;  // Assuming switch indices start from 0
-  int destSwitch = ((daddr >> 8) & 0xFF) % 9;
+  int sourceSwitch = ((saddr >> 8) & 0xFF) / 9;  // Assuming switch indices start from 0
+  int destSwitch = ((daddr >> 8) & 0xFF) / 9;
 
   // Calculate distance between TOR switches
   int distance = abs(sourceSwitch - destSwitch);
