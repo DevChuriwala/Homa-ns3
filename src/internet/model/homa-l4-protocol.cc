@@ -171,32 +171,34 @@ HomaL4Protocol::GetBdp(void) const
 uint16_t 
 HomaL4Protocol::GetBdpFromPort(uint16_t sport, uint16_t dport) const
 {
-  // Assuming 144 nodes, 9 TOR switches
-  const int TOR_SWITCH_SIZE = 16;  // Assuming each TOR switch has 16 nodes
+  // // Assuming 144 nodes, 9 TOR switches
+  // const int TOR_SWITCH_SIZE = 4;  // Assuming each TOR switch has 16 nodes
 
-  // Calculate switch indices based on ports
-  int sourceSwitch = (sport - 1000) / TOR_SWITCH_SIZE;
-  int destSwitch = (dport - 1000) / TOR_SWITCH_SIZE;
+  // // Calculate switch indices based on ports
+  // int sourceSwitch = (sport - 1000) / TOR_SWITCH_SIZE;
+  // int destSwitch = (dport - 1000) / TOR_SWITCH_SIZE;
 
-  // Calculate distance between TOR switches
-  int distance = abs(sourceSwitch - destSwitch);
+  // // Calculate distance between TOR switches
+  // int distance = abs(sourceSwitch - destSwitch);
 
-  // Assign BDP based on distance
-  return 7 + (distance * 2);
+  // // Assign BDP based on distance
+  // return 7 + (distance * 2);
+  return 7
 }
 
 uint16_t 
 HomaL4Protocol::GetBdpFromIP(uint32_t saddr, uint32_t daddr) const
 {
-  // Calculate switch indices based on the third octet of IPs
-  int sourceSwitch = ((saddr >> 8) & 0xFF) / 9;  // Assuming switch indices start from 0
-  int destSwitch = ((daddr >> 8) & 0xFF) / 9;
+  // // Calculate switch indices based on the third octet of IPs
+  // int sourceSwitch = ((saddr >> 8) & 0xFF) / 2;  // Assuming switch indices start from 0
+  // int destSwitch = ((daddr >> 8) & 0xFF) / 2;
 
-  // Calculate distance between TOR switches
-  int distance = abs(sourceSwitch - destSwitch);
+  // // Calculate distance between TOR switches
+  // int distance = abs(sourceSwitch - destSwitch);
 
-  // Assign BDP based on distance
-  return 7 + (distance * 2);
+  // // Assign BDP based on distance
+  // return 7 + (distance * 2);
+  return 7;
 }
 
 
