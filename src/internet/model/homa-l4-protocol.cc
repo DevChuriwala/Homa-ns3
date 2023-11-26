@@ -183,7 +183,7 @@ HomaL4Protocol::GetBdpFromPort(uint16_t sport, uint16_t dport) const
 
   // // Assign BDP based on distance
   // return 7 + (distance * 2);
-  return 7
+  return 7;
 }
 
 uint16_t 
