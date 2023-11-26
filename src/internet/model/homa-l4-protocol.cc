@@ -501,15 +501,15 @@ HomaL4Protocol::SendDown (Ptr<Packet> packet,
     uint32_t msgSizeBytes = homaHeader.GetMsgSize ();
     uint16_t msgSizePkts = msgSizeBytes / payloadSize + (msgSizeBytes % payloadSize != 0);
     uint16_t remainingPkts = msgSizePkts - homaHeader.GetGrantOffset () - (uint16_t)1 + GetBdpFromIP(saddr.Get(), daddr.Get());
-    NS_LOG_WARN("SendDown + " << this->GetObject<Ipv4> ()->GetAddress(1, 0) <<" " << Simulator::Now ().GetNanoSeconds () 
-      << " " << saddr << ":" << " "  << daddr << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ());
+   // NS_LOG_WARN("SendDown + " << this->GetObject<Ipv4> ()->GetAddress(1, 0) <<" " << Simulator::Now ().GetNanoSeconds () 
+   //   << " " << saddr << ":" << " "  << daddr << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ());
     m_dataSendTrace(packet, saddr, daddr, homaHeader.GetSrcPort (), 
                     homaHeader.GetDstPort (), homaHeader.GetTxMsgId (), 
                     homaHeader.GetPktOffset (), remainingPkts);
   }
 
-  NS_LOG_WARN("SendDown2 + " << this->GetObject<Ipv4> ()->GetAddress(1, 0) <<" " << Simulator::Now ().GetNanoSeconds () 
-      << " " << saddr << ":" << " "  << daddr << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ()); 
+ // NS_LOG_WARN("SendDown2 + " << this->GetObject<Ipv4> ()->GetAddress(1, 0) <<" " << Simulator::Now ().GetNanoSeconds () 
+ //     << " " << saddr << ":" << " "  << daddr << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ()); 
   m_downTarget (packet, saddr, daddr, PROT_NUMBER, route);
 }
     
@@ -589,11 +589,11 @@ HomaL4Protocol::Receive (Ptr<Packet> packet,
                     homaHeader.GetPrio ());
     CalculateRTTPackets(homaHeader.GetTime(), homaHeader.GetSrcPort (), homaHeader.GetDstPort ()
     , header.GetSource().Get(), header.GetDestination().Get());
-    NS_LOG_WARN("Receive - "<< "time: "<< homaHeader.GetTime() << " " << this->GetObject<Ipv4> ()->GetAddress(1, 0) << " " << Simulator::Now ().GetNanoSeconds () 
-      << " " << header.GetSource () << ":" << " "  << header.GetDestination () << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ());
+   // NS_LOG_WARN("Receive - "<< "time: "<< homaHeader.GetTime() << " " << this->GetObject<Ipv4> ()->GetAddress(1, 0) << " " << Simulator::Now ().GetNanoSeconds () 
+   //   << " " << header.GetSource () << ":" << " "  << header.GetDestination () << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ());
   } else {
-     NS_LOG_WARN("Receive2 - " << this->GetObject<Ipv4> ()->GetAddress(1, 0) << " " << Simulator::Now ().GetNanoSeconds () 
-      << " " << header.GetSource () << ":" << " "  << header.GetDestination () << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ());
+   //  NS_LOG_WARN("Receive2 - " << this->GetObject<Ipv4> ()->GetAddress(1, 0) << " " << Simulator::Now ().GetNanoSeconds () 
+   //   << " " << header.GetSource () << ":" << " "  << header.GetDestination () << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ());
     m_ctrlRecvTrace(cp, header.GetSource (), header.GetDestination (), 
                     homaHeader.GetSrcPort (), homaHeader.GetDstPort (), 
                     homaHeader.GetFlags (), homaHeader.GetGrantOffset(), 
