@@ -86,6 +86,9 @@ public:
   HomaL4Protocol ();
   virtual ~HomaL4Protocol ();
 
+  void SetRTTPacketsToHeader(HomaHeader header);
+  void UpdateRTTPackets(HomaHeader header);
+
   /**
    * Set node associated with this stack.
    * \param node The corresponding node.

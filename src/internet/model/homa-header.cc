@@ -42,7 +42,8 @@ NS_OBJECT_ENSURE_REGISTERED (HomaHeader);
  * problems so you can see the patterns in memory.
  */
 HomaHeader::HomaHeader ()
-  : m_time (0),
+  : m_rttPackets (1),
+    m_time (0),
     m_srcPort (0xfffd),
     m_dstPort (0xfffd),
     m_txMsgId (0),
@@ -97,7 +98,7 @@ HomaHeader::GetSerializedSize (void) const
   /* Note: The original Homa implementation has a slighly different packet 
    *       header format for every type of Homa packet.
    */
-  return 28;
+  return 30;
   // TODO: If the above value is updated, update the default payload size
   //       in the declaration of Homa nanoPU implementation.
 }
@@ -134,6 +135,7 @@ void
 HomaHeader::Serialize (Buffer::Iterator start) const
 {
   Buffer::Iterator i = start;
+  i.WriteHtonU16 (m_rttPackets);
   i.WriteHtolsbU64 (m_time);
   i.WriteHtonU16 (m_srcPort);
   i.WriteHtonU16 (m_dstPort);
@@ -150,6 +152,7 @@ uint32_t
 HomaHeader::Deserialize (Buffer::Iterator start)
 {
   Buffer::Iterator i = start;
+  m_rttPackets = i.ReadNtohU16();
   m_time = i.ReadLsbtohU64 ();
   m_srcPort = i.ReadNtohU16 ();
   m_dstPort = i.ReadNtohU16 ();
@@ -163,6 +166,18 @@ HomaHeader::Deserialize (Buffer::Iterator start)
   m_generation = i.ReadNtohU16 ();
 
   return GetSerializedSize ();
+}
+
+void 
+HomaHeader::SetRTTPackets (uint16_t rttPackets)
+{
+  m_rttPackets = rttPackets;
+}
+
+uint16_t 
+HomaHeader::GetRTTPackets (void) const
+{
+  return m_rttPackets;
 }
 
 void 

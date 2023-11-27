@@ -61,12 +61,21 @@ public:
   virtual void Serialize (Buffer::Iterator start) const;
   virtual uint32_t Deserialize (Buffer::Iterator start);
   
+   /**
+   * \param rttPackets The RTT packets for this HomaHeader
+   */
+  void SetRTTPackets (uint16_t rttPackets);
   /**
-   * \param port The source port for this HomaHeader
+   * \return The RTT packets for this HomaHeader
+   */
+  uint16_t GetRTTPackets (void) const;
+
+  /**
+   * \param time The timestamp for this HomaHeader
    */
   void SetTime (uint64_t time);
   /**
-   * \return The source port for this HomaHeader
+   * \return The timestamp for this HomaHeader
    */
   uint64_t GetTime (void) const;
   /**
@@ -201,6 +210,7 @@ public:
   static const uint8_t PROT_NUMBER = 198; //!< Protocol number of HOMA to be used in IP packets
 
 private:
+  uint16_t m_rttPackets;    // RTT packets
   uint64_t m_time;          // Timestamp
   uint16_t m_srcPort;     //!< Source port
   uint16_t m_dstPort;     //!< Destination port
