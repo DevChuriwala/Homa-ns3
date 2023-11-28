@@ -399,7 +399,7 @@ HomaSocket::DoSend (Ptr<Packet> msg)
 
   if (Ipv4Address::IsMatchingType (m_defaultAddress))
     {
-      return DoSendTo (msg, Ipv4Address::ConvertFrom (m_defaultAddress), m_defaultPort, GetIpTos ());
+      return DoSendTo (msg, Ipv4Address::ConvertFrom (m_defaultAddress), m_defaultPort, GetIpTos (), 0);
     }
 
   m_errno = ERROR_AFNOSUPPORT;
@@ -416,13 +416,13 @@ HomaSocket::SendTo (Ptr<Packet> msg, uint32_t flags, const Address &address)
       Ipv4Address ipv4 = transport.GetIpv4 ();
       uint16_t port = transport.GetPort ();
       uint8_t tos = transport.GetTos ();
-      return DoSendTo (msg, ipv4, port, tos);
+      return DoSendTo (msg, ipv4, port, tos, flags);
     }
   return -1;
 }
     
 int
-HomaSocket::DoSendTo (Ptr<Packet> msg, Ipv4Address dest, uint16_t port, uint8_t tos)
+HomaSocket::DoSendTo (Ptr<Packet> msg, Ipv4Address dest, uint16_t port, uint8_t tos, uint32_t flags)
 {
   NS_LOG_FUNCTION (this << msg << dest << port << (uint16_t) tos);
   if (m_boundnetdevice)
@@ -531,7 +531,7 @@ HomaSocket::DoSendTo (Ptr<Packet> msg, Ipv4Address dest, uint16_t port, uint8_t 
             }
           NS_LOG_LOGIC ("Sending one copy from " << addri << " to " << dest);
           m_homa->Send (msg->Copy (), addri, dest,
-                       m_endPoint->GetLocalPort (), port);
+                       m_endPoint->GetLocalPort (), port, flags);
           NotifyDataSent (msg->GetSize ());
           NotifySend (GetTxAvailable ());
         }
@@ -541,7 +541,7 @@ HomaSocket::DoSendTo (Ptr<Packet> msg, Ipv4Address dest, uint16_t port, uint8_t 
   else if (m_endPoint->GetLocalAddress () != Ipv4Address::GetAny ())
     {
       m_homa->Send (msg->Copy (), m_endPoint->GetLocalAddress (), dest,
-                   m_endPoint->GetLocalPort (), port, 0);
+                   m_endPoint->GetLocalPort (), port, 0, flags);
       NotifyDataSent (msg->GetSize ());
       NotifySend (GetTxAvailable ());
       return msg->GetSize ();
@@ -577,7 +577,7 @@ HomaSocket::DoSendTo (Ptr<Packet> msg, Ipv4Address dest, uint16_t port, uint8_t 
 
           header.SetSource (route->GetSource ());
           m_homa->Send (msg->Copy (), header.GetSource (), header.GetDestination (),
-                       m_endPoint->GetLocalPort (), port, route);
+                       m_endPoint->GetLocalPort (), port, route, flags);
           NotifyDataSent (msg->GetSize ());
           return msg->GetSize ();
         }

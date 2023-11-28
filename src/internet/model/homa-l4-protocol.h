@@ -226,7 +226,7 @@ public:
    */
   void Send (Ptr<Packet> message,
              Ipv4Address saddr, Ipv4Address daddr, 
-             uint16_t sport, uint16_t dport);
+             uint16_t sport, uint16_t dport, uint32_t flags);
   /**
    * \brief Send a message via Homa Transport Protocol (IPv4)
    * \param message The message to send
@@ -235,10 +235,12 @@ public:
    * \param sport The source port number
    * \param dport The destination port number
    * \param route The route requested by the sender
+   * \param flags Flags to set in the homa header
    */
   void Send (Ptr<Packet> message,
              Ipv4Address saddr, Ipv4Address daddr, 
-             uint16_t sport, uint16_t dport, Ptr<Ipv4Route> route);
+             uint16_t sport, uint16_t dport, Ptr<Ipv4Route> route,
+             uint32_t flags);
   
   // called by HomaSendScheduler or HomaRecvScheduler.
   /**
@@ -368,9 +370,15 @@ public:
 
   HomaOutboundMsg (Ptr<Packet> message, 
                    Ipv4Address saddr, Ipv4Address daddr, 
-                   uint16_t sport, uint16_t dport, 
+                   uint16_t sport, uint16_t dport, uint32_t flags,
                    Ptr<HomaL4Protocol> homa);
   ~HomaOutboundMsg (void);
+
+  /**
+   * \brief Get the flags requested for this message.
+   * \return The corresponding flag.
+   */
+  uint32_t GetFlags (void);
   
   /**
    * \brief Set the route requested for this message. (0 if not source-routed)
@@ -505,7 +513,8 @@ private:
   uint32_t m_maxPayloadSize; //!< Number of bytes that can be stored in packet excluding headers
   uint32_t m_remainingBytes; //!< Remaining number of bytes that are not delivered yet
   uint16_t m_maxGrantedIdx;  //!< Highest Grant Offset received so far (default: BDP)
-  
+  uint32_t m_flags;            //!< Set flags to the outbound message
+
   uint8_t m_prio;            //!< The most recent priority of the message
   bool m_prioSetByReceiver;  //!< Whether the receiver has specified a priority yet
   

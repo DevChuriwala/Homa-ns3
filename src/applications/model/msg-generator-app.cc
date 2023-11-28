@@ -173,7 +173,7 @@ void MsgGeneratorApp::StartApplication (int hostId)
 {
   NS_LOG_FUNCTION (Simulator::Now ().GetNanoSeconds () << this);
 
-  // if(hostId != 0) return;
+  if(hostId != 0) return;
     
   NS_ASSERT_MSG(m_remoteClient && m_interMsgTime && m_msgSizePkts,
                 "MsgGeneratorApp should be installed on a node and "
@@ -300,14 +300,20 @@ void MsgGeneratorApp::SendMessagesToAll ()
   }
 
   InetSocketAddress receiverAddr = m_remoteClients[id];
-  uint32_t msgSizeBytes = 10;
+  uint32_t msgSizeBytes = 8;
   // Create the message to send
-  Ptr<Packet> msg = Create<Packet> (msgSizeBytes);
+  // Ptr<Packet> msg = Create<Packet> (msgSizeBytes);
+
+  // Create the message to send with timestamp as the payload
+  uint8_t buffer[8];
+  uint64_t currentTime = Simulator::Now ().GetNanoSeconds ();
+  std::memcpy(buffer, &currentTime, sizeof(currentTime));
+  Ptr<Packet> msg = Create<Packet> (buffer, 8);
 
   NS_LOG_LOGIC ("MsgGeneratorApp SendMessagesToAll {" << this << ") generates a message of size: "
                 << msgSizeBytes << " Bytes.");
 
-  int sentBytes = m_socket->SendTo (msg, 0, receiverAddr);
+  int sentBytes = m_socket->SendTo (msg, 128, receiverAddr); // 128 corresponds to time in payload
   if (sentBytes > 0)
   {
     NS_LOG_INFO("SendMessagesToAll " << sentBytes << " Bytes sent to " << receiverAddr);

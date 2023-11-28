@@ -203,7 +203,7 @@ private:
    * \param tos ToS
    * \returns 0 on success, -1 on failure
    */
-  int DoSendTo (Ptr<Packet> msg, Ipv4Address daddr, uint16_t dport, uint8_t tos);
+  int DoSendTo (Ptr<Packet> msg, Ipv4Address daddr, uint16_t dport, uint8_t tos, uint32_t flags);
 
   /**
    * \brief Called by the L3 protocol when it received a packet to pass on to TCP.

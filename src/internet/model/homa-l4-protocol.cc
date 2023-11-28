@@ -113,7 +113,7 @@ HomaL4Protocol::GetTypeId (void)
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("OptimizeMemory", 
                    "High performant mode (only packet sizes are stored to save from memory).",
-                   BooleanValue (true),
+                   BooleanValue (false),
                    MakeBooleanAccessor (&HomaL4Protocol::m_memIsOptimized),
                    MakeBooleanChecker ())
     .AddTraceSource ("MsgBegin",
@@ -469,22 +469,22 @@ HomaL4Protocol::UpdateRTTPackets(HomaHeader homaHeader)
 void
 HomaL4Protocol::Send (Ptr<Packet> message, 
                      Ipv4Address saddr, Ipv4Address daddr, 
-                     uint16_t sport, uint16_t dport)
+                     uint16_t sport, uint16_t dport, uint32_t flags)
 {
   NS_LOG_FUNCTION (this << message << saddr << daddr << sport << dport);
     
-  Send(message, saddr, daddr, sport, dport, 0);
+  Send(message, saddr, daddr, sport, dport, 0, flags);
 }
     
 void
 HomaL4Protocol::Send (Ptr<Packet> message, 
                      Ipv4Address saddr, Ipv4Address daddr, 
-                     uint16_t sport, uint16_t dport, Ptr<Ipv4Route> route)
+                     uint16_t sport, uint16_t dport, Ptr<Ipv4Route> route, uint32_t flags)
 {
   NS_LOG_FUNCTION (this << message << saddr << daddr << sport << dport << route);
   
   Ptr<HomaOutboundMsg> outMsg = CreateObject<HomaOutboundMsg> (message, saddr, daddr, 
-                                                               sport, dport, this);
+                                                               sport, dport, flags, this);
   outMsg->SetRoute (route); // This is mostly unnecessary
     
   int txMsgId = m_sendScheduler->ScheduleNewMsg(outMsg);
@@ -531,6 +531,18 @@ HomaL4Protocol::SendDown (Ptr<Packet> packet,
     uint16_t remainingPkts = msgSizePkts - homaHeader.GetGrantOffset () - (uint16_t)1 + GetBdpFromIP(saddr.Get(), daddr.Get());
     // NS_LOG_WARN("SendDown DATA + " << this->GetObject<Ipv4> ()->GetAddress(1, 0) <<" " << Simulator::Now ().GetNanoSeconds () 
     //  << " " << saddr << ":" << " "  << daddr << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ());
+
+    if (homaHeader.GetFlags() & HomaHeader::Flags_t::BOGUS) {
+      NS_LOG_WARN ("SendDown DATA: payload size: " << packet->GetSize() << " Msg id: "<< homaHeader.GetTxMsgId ());
+      NS_LOG_WARN (this << packet);
+
+      uint8_t buffer[40];
+      uint32_t ss = packet->CopyData(buffer, (uint32_t)40);
+      uint64_t data;
+      std::memcpy(&data, (buffer + 30), 8);
+      NS_LOG_WARN("Bytes copied: " << ss << " Data: "<< data);
+    }
+  
     m_dataSendTrace(packet, saddr, daddr, homaHeader.GetSrcPort (), 
                     homaHeader.GetDstPort (), homaHeader.GetTxMsgId (), 
                     homaHeader.GetPktOffset (), remainingPkts);
@@ -581,6 +593,16 @@ HomaL4Protocol::Receive (Ptr<Packet> packet,
   NS_ASSERT_MSG(cp->GetSize()==homaHeader.GetPayloadSize(),
                 "HomaL4Protocol (" << this << ") received a packet "
                 " whose payload size doesn't match the homa header field!");
+
+  if (homaHeader.GetFlags() & HomaHeader::Flags_t::BOGUS) {
+    NS_LOG_WARN (this << cp << homaHeader);
+    NS_LOG_WARN ("Receive: Payload size: " << cp->GetSize());
+    uint8_t buffer[8];
+    uint32_t ss = cp->CopyData(buffer, (uint32_t)8);
+    uint64_t data;
+    std::memcpy(&data, buffer, 8);
+    NS_LOG_WARN("Bytes copied: " << ss << " Data: "<< data);
+  }
 
   NS_LOG_DEBUG ("Looking up dst " << header.GetDestination () << " port " << homaHeader.GetDstPort ()); 
   Ipv4EndPointDemux::EndPoints endPoints =
@@ -745,7 +767,7 @@ TypeId HomaOutboundMsg::GetTypeId (void)
  */
 HomaOutboundMsg::HomaOutboundMsg (Ptr<Packet> message, 
                                   Ipv4Address saddr, Ipv4Address daddr, 
-                                  uint16_t sport, uint16_t dport, 
+                                  uint16_t sport, uint16_t dport, uint32_t flags,
                                   Ptr<HomaL4Protocol> homa)
     : m_route(0),
       m_prio(0),
@@ -759,6 +781,7 @@ HomaOutboundMsg::HomaOutboundMsg (Ptr<Packet> message,
   m_sport = sport;
   m_dport = dport;
   m_homa = homa;
+  m_flags = flags;
     
   m_msgSizeBytes = message->GetSize ();
   // The remaining undelivered message size equals to the total message size in the beginning
@@ -806,6 +829,11 @@ HomaOutboundMsg::HomaOutboundMsg (Ptr<Packet> message,
 HomaOutboundMsg::~HomaOutboundMsg ()
 {
   NS_LOG_FUNCTION_NOARGS ();
+}
+
+uint32_t HomaOutboundMsg::GetFlags (void)
+{
+  return m_flags;
 }
 
 void HomaOutboundMsg::SetRoute(Ptr<Ipv4Route> route)
@@ -1219,7 +1247,12 @@ bool HomaSendScheduler::GetNextPktOfMsg (uint16_t txMsgId, Ptr<Packet> &p)
     homaHeader.SetDstPort (candidateMsg->GetDstPort ());
     homaHeader.SetSrcPort (candidateMsg->GetSrcPort ());
     homaHeader.SetTxMsgId (txMsgId);
-    homaHeader.SetFlags (HomaHeader::Flags_t::DATA); 
+    if (candidateMsg->GetFlags() & HomaHeader::Flags_t::BOGUS) {
+      homaHeader.SetFlags (HomaHeader::Flags_t::BOGUS | HomaHeader::Flags_t::DATA);
+      NS_LOG_WARN ("Message " << txMsgId << " requested for payload time flag");
+    } else {
+      homaHeader.SetFlags (HomaHeader::Flags_t::DATA); 
+    }
     homaHeader.SetMsgSize (candidateMsg->GetMsgSizeBytes ());
     homaHeader.SetPktOffset (pktOffset);
     homaHeader.SetGrantOffset (candidateMsg->GetMaxGrantedIdx ()); // For monitoring purposes
