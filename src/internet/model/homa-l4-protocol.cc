@@ -539,7 +539,7 @@ HomaL4Protocol::SendDown (Ptr<Packet> packet,
       uint8_t buffer[40];
       uint32_t ss = packet->CopyData(buffer, (uint32_t)40);
       uint64_t data;
-      std::memcpy(&data, (buffer + 30), 8);
+      std::memcpy(&data, (buffer + 22), 8);
       NS_LOG_WARN("Bytes copied: " << ss << " Data: "<< data);
     }
   
@@ -593,7 +593,7 @@ HomaL4Protocol::Receive (Ptr<Packet> packet,
   NS_ASSERT_MSG(cp->GetSize()==homaHeader.GetPayloadSize(),
                 "HomaL4Protocol (" << this << ") received a packet "
                 " whose payload size doesn't match the homa header field!");
-
+  /*
   if (homaHeader.GetFlags() & HomaHeader::Flags_t::BOGUS) {
     NS_LOG_WARN (this << cp << homaHeader);
     NS_LOG_WARN ("Receive: Payload size: " << cp->GetSize());
@@ -602,7 +602,7 @@ HomaL4Protocol::Receive (Ptr<Packet> packet,
     uint64_t data;
     std::memcpy(&data, buffer, 8);
     NS_LOG_WARN("Bytes copied: " << ss << " Data: "<< data);
-  }
+  } */
 
   NS_LOG_DEBUG ("Looking up dst " << header.GetDestination () << " port " << homaHeader.GetDstPort ()); 
   Ipv4EndPointDemux::EndPoints endPoints =
@@ -619,8 +619,15 @@ HomaL4Protocol::Receive (Ptr<Packet> packet,
   if (rxFlag & HomaHeader::Flags_t::DATA ||
       rxFlag & HomaHeader::Flags_t::BUSY)
   {
-    if (rxFlag & HomaHeader::Flags_t::DATA) {
-      CalculateRTTPackets(homaHeader.GetTime(), homaHeader.GetSrcPort (), homaHeader.GetDstPort ()
+    if (rxFlag & HomaHeader::Flags_t::BOGUS) {
+        NS_LOG_WARN (this << cp << homaHeader);
+        NS_LOG_WARN ("Receive: Payload size: " << cp->GetSize());
+        uint8_t buffer[8];
+        uint32_t ss = cp->CopyData(buffer, (uint32_t)8);
+        uint64_t currentTime;
+        std::memcpy(&currentTime, buffer, 8);
+        NS_LOG_WARN("Bytes copied: " << ss << " Time: "<< currentTime);
+        CalculateRTTPackets(currentTime, homaHeader.GetSrcPort (), homaHeader.GetDstPort ()
         , header.GetSource().Get(), header.GetDestination().Get());
     }
     m_recvScheduler->ReceivePacket(cp, header, homaHeader, interface);
@@ -1243,7 +1250,7 @@ bool HomaSendScheduler::GetNextPktOfMsg (uint16_t txMsgId, Ptr<Packet> &p)
     p = candidateMsg->RemoveNextPktFromTxQ(pktOffset);
       
     HomaHeader homaHeader;
-    homaHeader.SetTime((uint64_t) Simulator::Now ().GetNanoSeconds ());
+    // homaHeader.SetTime((uint64_t) Simulator::Now ().GetNanoSeconds ());
     homaHeader.SetDstPort (candidateMsg->GetDstPort ());
     homaHeader.SetSrcPort (candidateMsg->GetSrcPort ());
     homaHeader.SetTxMsgId (txMsgId);
