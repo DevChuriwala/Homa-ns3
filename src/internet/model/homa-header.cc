@@ -114,7 +114,7 @@ HomaHeader::FlagsToString (uint8_t flags, const std::string& delimiter)
     "BUSY",
     "CUTOFFS",
     "FREEZE",
-    "BOGUS"
+    "TIMESTAMP"
   };
   std::string flagsDescription = "";
   for (uint8_t i = 0; i < 8; ++i)

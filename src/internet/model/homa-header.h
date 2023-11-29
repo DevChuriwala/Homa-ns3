@@ -204,7 +204,7 @@ public:
     BUSY = 16,    //!< BUSY
     CUTOFFS = 32, //!< Priority cutoffs
     FREEZE = 64,  //!< 
-    BOGUS = 128   //!< Used only in unit tests.
+    TIMESTAMP = 128   //!< Used only in unit tests.
   } Flags_t;
   
   static const uint8_t PROT_NUMBER = 198; //!< Protocol number of HOMA to be used in IP packets

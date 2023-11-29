@@ -532,7 +532,7 @@ HomaL4Protocol::SendDown (Ptr<Packet> packet,
     // NS_LOG_WARN("SendDown DATA + " << this->GetObject<Ipv4> ()->GetAddress(1, 0) <<" " << Simulator::Now ().GetNanoSeconds () 
     //  << " " << saddr << ":" << " "  << daddr << " " << homaHeader.GetTxMsgId () << " " << homaHeader.GetPktOffset ());
 
-    if (homaHeader.GetFlags() & HomaHeader::Flags_t::BOGUS) {
+    if (homaHeader.GetFlags() & HomaHeader::Flags_t::TIMESTAMP) {
       NS_LOG_WARN ("SendDown DATA: payload size: " << packet->GetSize() << " Msg id: "<< homaHeader.GetTxMsgId ());
       NS_LOG_WARN (this << packet);
 
@@ -594,7 +594,7 @@ HomaL4Protocol::Receive (Ptr<Packet> packet,
                 "HomaL4Protocol (" << this << ") received a packet "
                 " whose payload size doesn't match the homa header field!");
   /*
-  if (homaHeader.GetFlags() & HomaHeader::Flags_t::BOGUS) {
+  if (homaHeader.GetFlags() & HomaHeader::Flags_t::TIMESTAMP) {
     NS_LOG_WARN (this << cp << homaHeader);
     NS_LOG_WARN ("Receive: Payload size: " << cp->GetSize());
     uint8_t buffer[8];
@@ -619,7 +619,7 @@ HomaL4Protocol::Receive (Ptr<Packet> packet,
   if (rxFlag & HomaHeader::Flags_t::DATA ||
       rxFlag & HomaHeader::Flags_t::BUSY)
   {
-    if (rxFlag & HomaHeader::Flags_t::BOGUS) {
+    if (rxFlag & HomaHeader::Flags_t::TIMESTAMP) {
         NS_LOG_WARN (this << cp << homaHeader);
         NS_LOG_WARN ("Receive: Payload size: " << cp->GetSize());
         uint8_t buffer[8];
@@ -1254,8 +1254,8 @@ bool HomaSendScheduler::GetNextPktOfMsg (uint16_t txMsgId, Ptr<Packet> &p)
     homaHeader.SetDstPort (candidateMsg->GetDstPort ());
     homaHeader.SetSrcPort (candidateMsg->GetSrcPort ());
     homaHeader.SetTxMsgId (txMsgId);
-    if (candidateMsg->GetFlags() & HomaHeader::Flags_t::BOGUS) {
-      homaHeader.SetFlags (HomaHeader::Flags_t::BOGUS | HomaHeader::Flags_t::DATA);
+    if (candidateMsg->GetFlags() & HomaHeader::Flags_t::TIMESTAMP) {
+      homaHeader.SetFlags (HomaHeader::Flags_t::TIMESTAMP | HomaHeader::Flags_t::DATA);
       NS_LOG_WARN ("Message " << txMsgId << " requested for payload time flag");
     } else {
       homaHeader.SetFlags (HomaHeader::Flags_t::DATA); 
