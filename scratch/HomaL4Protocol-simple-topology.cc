@@ -224,9 +224,11 @@ main (int argc, char *argv[])
        / / \ \     / / \ \
      h1 h2 h3 h4  h5 h6 h7 h8
   */
-  int nHosts = 8;
-  int nTors = 2;
-  int nSpines = 1;
+  // 144,9,4
+  // 8,2,1
+  int nHosts = 144;
+  int nTors = 9;
+  int nSpines = 4;
   
   /******** Create Nodes ********/
   NS_LOG_UNCOND("Creating Nodes...");

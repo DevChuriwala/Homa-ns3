@@ -188,27 +188,29 @@ HomaL4Protocol::GetBdp(void) const
 uint16_t 
 HomaL4Protocol::GetBdpFromPort(uint16_t sport, uint16_t dport) const
 {
-  if (((sport == 1000 || sport == 1001 || sport == 1002 || sport == 1003) && 
-    (dport == 1000 || dport == 1001 || dport == 1002 || dport == 1003)) || ((sport == 1004 || sport == 1005 || sport == 1006 || sport == 1007) && 
-    (dport == 1004 || dport == 1005 || dport == 1006 || dport == 1007))) {
-    return 5;
-  } else {
-    return 7;
-  }
+  // if (((sport == 1000 || sport == 1001 || sport == 1002 || sport == 1003) && 
+  //   (dport == 1000 || dport == 1001 || dport == 1002 || dport == 1003)) || ((sport == 1004 || sport == 1005 || sport == 1006 || sport == 1007) && 
+  //   (dport == 1004 || dport == 1005 || dport == 1006 || dport == 1007))) {
+  //   return 5;
+  // } else {
+  //   return 7;
+  // }
+  return 7;
 }
 
 uint16_t 
 HomaL4Protocol::GetBdpFromIP(uint32_t saddr, uint32_t daddr) const
 {
-  uint8_t saddrThirdOctet = (saddr >> 8) & 0xFF;
-  uint8_t daddrThirdOctet = (daddr >> 8) & 0xFF;
+  // uint8_t saddrThirdOctet = (saddr >> 8) & 0xFF;
+  // uint8_t daddrThirdOctet = (daddr >> 8) & 0xFF;
 
-  // Check if in same switch (both <=3 or >=4)
-  if ((saddrThirdOctet <= 3 && daddrThirdOctet <= 3) || (saddrThirdOctet >= 4 && daddrThirdOctet >= 4)) {
-    return 5;
-   } else {
-    return 7;
-  }
+  // // Check if in same switch (both <=3 or >=4)
+  // if ((saddrThirdOctet <= 3 && daddrThirdOctet <= 3) || (saddrThirdOctet >= 4 && daddrThirdOctet >= 4)) {
+  //   return 5;
+  //  } else {
+  //   return 7;
+  // }
+  return 7;
 }
 
 // uint16_t 
