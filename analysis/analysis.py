@@ -211,87 +211,45 @@ def analyze_filenames(filenames):
     return file_num_nodes, file_network_load, file_bdp
 
 
-for filenames in filenamess:
-    print("\nRunning: " + str(filenames))
-
-    # # Analyze filenames
-    # file_num_nodes = []
-    # file_network_load = []
-    # file_bdp = []
-
-    # for i, filename in enumerate(filenames):
-    #     curr_num_nodes = 0
-    #     networkLoad = 0
-    #     bdp = "0"
-
-    #     actual_filename = parseFilename(filename)
-
-    #     if verifyFilename(actual_filename):
-    #         try:
-    #             curr_num_nodes = int(getNumNodes(actual_filename))
-    #             networkLoad = float(getLoad(actual_filename)) / 100
-    #             bdp = getBDP(actual_filename)
-    #         except:
-    #             print("Error parsing filename: " + actual_filename)
-
-    #     # print(curr_num_nodes, networkLoad, bdp)
-    #     file_num_nodes.append(curr_num_nodes)
-    #     file_network_load.append(networkLoad)
-    #     file_bdp.append(bdp)
-    file_num_nodes, file_network_load, file_bdp = analyze_filenames(filenames)
-
-    # Set constants
-    NUM_NODES = file_num_nodes[0]
-    if NUM_NODES == 144:
-        NUM_SWITCHES = 9
-        NUM_SPINES = 4
-    elif NUM_NODES == 8:
-        NUM_SWITCHES = 2
-        NUM_SPINES = 1
-
-    # Create output file to append to
+def prepare_output_file(file_num_nodes, file_network_load, file_bdp):
+    # Create output folder name based on the parameters
     output_folder = f"results/{file_num_nodes[0]}nodes_{file_network_load[0]}load_{file_bdp[0]}pkts_vs_{file_bdp[1]}pkts"
     output_file = f"{output_folder}/results.txt"
 
-    # Erase file if exists
+    # Erase file if it exists
     if os.path.exists(output_file):
         os.remove(output_file)
 
-    # Create dir if doesnt exist
+    # Create directory if it doesn't exist
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
+    # Return the path of the output file
+    return output_folder, output_file
+
+
+def isSameSwitch(sender, receiver, NUM_SWITCHES):
+    senderPortNum = (int(sender.split(":")[1]) - 1000) // NUM_SWITCHES
+    receiverPortNum = (int(receiver.split(":")[1]) - 1000) // NUM_SWITCHES
+    return senderPortNum == receiverPortNum
+
+
+def process_message_logs(filenames, NUM_SWITCHES):
+    # Initialize lists to store results for each file
     fileMsgStartEntryDict = []
     fileMsgCompletionTimesDict = []
     fileAllMsgSizes = []
     fileMsgSizePercentiles = []
-
     fileMsgCompletionTimesDictSameSwitch = []
     fileMsgCompletionTimesDictDiffSwitch = []
 
     for i, filename in enumerate(filenames):
-        # print(i, filename)
-
-        # Dict of start time
+        # Initialize dictionaries and list for the current file
         msgStartEntryDict = {}
-        # Dict of completion time
         msgCompletionTimesDict = {}
-        # List of all message sizes
         allMsgSizes = []
-
         msgCompletionTimesDictSameSwitch = {}
         msgCompletionTimesDictDiffSwitch = {}
-
-        # For 144 nodes 16 switches
-        def isSameSwitch(sender, receiver):
-            # senderSwitchNum = int(sender.split(".")[2]) // numSwitches
-            # receiverSwitchNum = int(receiver.split(".")[2]) // numSwitches
-            # return senderSwitchNum == receiverSwitchNum
-            # print(sender, receiver)
-            senderPortNum = (int(sender.split(":")[1]) - 1000) // NUM_SWITCHES
-            receiverPortNum = (int(receiver.split(":")[1]) - 1000) // NUM_SWITCHES
-            # print(senderPortNum, receiverPortNum)
-            return senderPortNum == receiverPortNum
 
         with open(filename, "r") as f:
             for line in f:
@@ -338,7 +296,7 @@ for filenames in filenamess:
                             msgCompletionTimesDict[msgSize] = [time - startTime]
 
                         # Same switch
-                        if isSameSwitch(sender, receiver):
+                        if isSameSwitch(sender, receiver, NUM_SWITCHES):
                             if msgSize in msgCompletionTimesDictSameSwitch:
                                 msgCompletionTimesDictSameSwitch[msgSize].append(
                                     time - startTime
@@ -373,6 +331,7 @@ for filenames in filenamess:
                             + ") not found!"
                         )
 
+        # Process and store results for the current file
         allMsgSizes = np.array(allMsgSizes)
         msgSizePercentiles = stats.rankdata(allMsgSizes, "max") / len(allMsgSizes) * 100
 
@@ -380,102 +339,117 @@ for filenames in filenamess:
         fileMsgCompletionTimesDict.append(msgCompletionTimesDict)
         fileAllMsgSizes.append(allMsgSizes)
         fileMsgSizePercentiles.append(msgSizePercentiles)
-
         fileMsgCompletionTimesDictSameSwitch.append(msgCompletionTimesDictSameSwitch)
         fileMsgCompletionTimesDictDiffSwitch.append(msgCompletionTimesDictDiffSwitch)
 
+    return (
+        fileMsgStartEntryDict,
+        fileMsgCompletionTimesDict,
+        fileAllMsgSizes,
+        fileMsgSizePercentiles,
+        fileMsgCompletionTimesDictSameSwitch,
+        fileMsgCompletionTimesDictDiffSwitch,
+    )
+
+
+def log_message_counts(
+    filenames,
+    fileMsgCompletionTimesDictSameSwitch,
+    fileMsgCompletionTimesDictDiffSwitch,
+    output_file,
+):
     for i, filename in enumerate(filenames):
-        # print(i, filename)
+        # Log filename
         log(output_file, "\n" + str(i) + " " + filename)
 
         # Print same switch number of messages
-        total_count = 0
-        for key in fileMsgCompletionTimesDictSameSwitch[i]:
-            total_count += len(fileMsgCompletionTimesDictSameSwitch[i][key])
-        log(output_file, "Same switch msg count: " + str(total_count))
+        total_count_same = sum(
+            len(fileMsgCompletionTimesDictSameSwitch[i][key])
+            for key in fileMsgCompletionTimesDictSameSwitch[i]
+        )
+        log(output_file, "Same switch msg count: " + str(total_count_same))
 
         # Print different switch number of messages
-        total_count = 0
-        for key in fileMsgCompletionTimesDictDiffSwitch[i]:
-            total_count += len(fileMsgCompletionTimesDictDiffSwitch[i][key])
+        total_count_diff = sum(
+            len(fileMsgCompletionTimesDictDiffSwitch[i][key])
+            for key in fileMsgCompletionTimesDictDiffSwitch[i]
+        )
+        log(output_file, "Different switch msg count: " + str(total_count_diff))
 
-        log(output_file, "Different switch msg count: " + str(total_count))
 
-    # print()
+def calculate_and_log_throughput(
+    filenames,
+    fileMsgCompletionTimesDictSameSwitch,
+    fileMsgCompletionTimesDictDiffSwitch,
+    output_file,
+    NUM_NODES,
+):
+    def calculate_throughput(msgCompletionTimesDict):
+        total_throughput = 0
+        for msgSize, times in msgCompletionTimesDict.items():
+            total_throughput += msgSize * len(times) / sum(times)
+
+        # Convert from bytes/ns to Gbps
+        total_throughput = total_throughput * 10e-9 / NUM_NODES
+        return total_throughput
 
     for i, filename in enumerate(filenames):
-        # print(i, filename)
         log(output_file, "\n" + str(i) + " " + filename)
 
-        total_throughput = 0
-        for msgSize in fileMsgCompletionTimesDictSameSwitch[i]:
-            # if total_throughput == 0:
-            #     print(msgSize, fileMsgCompletionTimesDictSameSwitch[i][msgSize])
-            total_throughput += (
-                msgSize
-                * len(fileMsgCompletionTimesDictSameSwitch[i][msgSize])
-                / sum(fileMsgCompletionTimesDictSameSwitch[i][msgSize])
-            )
+        # Calculate and log throughput for same switch
+        total_throughput_same = calculate_throughput(
+            fileMsgCompletionTimesDictSameSwitch[i]
+        )
+        log(output_file, "Same switch throughput: " + str(total_throughput_same))
 
-        # Convert from bytes/ns to bytes/s
-        # total_throughput = total_throughput * 1e9
+        # Calculate and log throughput for different switch
+        total_throughput_diff = calculate_throughput(
+            fileMsgCompletionTimesDictDiffSwitch[i]
+        )
+        log(output_file, "Different switch throughput: " + str(total_throughput_diff))
 
-        # Convert from bytes/s to Gbps
-        total_throughput = total_throughput * 10e-9 / NUM_NODES
 
-        log(output_file, "Same switch throughput: " + str(total_throughput))
-
-        total_throughput = 0
-        for msgSize in fileMsgCompletionTimesDictDiffSwitch[i]:
-            total_throughput += (
-                msgSize
-                * len(fileMsgCompletionTimesDictDiffSwitch[i][msgSize])
-                / sum(fileMsgCompletionTimesDictDiffSwitch[i][msgSize])
-            )
-
-        # Convert from bytes/ns to bytes/s
-        # total_throughput = total_throughput * 1e9
-
-        # Convert from bytes/s to Gbps
-        total_throughput = total_throughput * 10e-9 / NUM_NODES
-
-        log(output_file, "Different switch throughput: " + str(total_throughput))
-
-    # Basic stats
-
+def analyze_and_log_message_info(
+    filenames,
+    fileMsgStartEntryDict,
+    fileMsgCompletionTimesDict,
+    output_file,
+    pktPayloadSize,
+):
     for i, filename in enumerate(filenames):
-        # print("\n", i, filename)
         log(output_file, "\n" + str(i) + " " + filename)
 
-        # Items remaining in startEntryDict were uncompleted
-        numUncompleted = 0
-        for msgKey, msgStartTimes in fileMsgStartEntryDict[i].items():
-            numUncompleted += len(msgStartTimes)
-
+        # Count uncompleted messages
+        numUncompleted = sum(
+            len(msgStartTimes) for msgStartTimes in fileMsgStartEntryDict[i].values()
+        )
         log(output_file, "Number of uncompleted messages: " + str(numUncompleted))
+
+        # Log number of distinct message sizes
         log(
             output_file,
             "Number of distinct message sizes: "
             + str(len(fileMsgCompletionTimesDict[i])),
         )
 
+        # Initialize counters
         cntMultMeasures = 0
         numMsgs = 0
         nonFullPacketMsgSizes = []
+
         for msgSize, msgCompletionTimes in fileMsgCompletionTimesDict[i].items():
-            # Count number of distinct message sizes that have multiple measurements
+            # Count distinct message sizes with multiple measurements
             if len(msgCompletionTimes) > 1:
                 cntMultMeasures += 1
 
-            # Count number of distinct messages
+            # Count total number of messages
             numMsgs += len(msgCompletionTimes)
 
-            # Count number of non-full packet messages
+            # Identify non-full packet message sizes
             if msgSize % pktPayloadSize != 0:
-                # print(msgSize%1452)
-                # Dynamic packets are 1452, not 1460, so this is expected
                 nonFullPacketMsgSizes.append((msgSize, msgSize % pktPayloadSize))
 
+        # Log additional information
         log(
             output_file,
             "Number of distinct message sizes that have multiple measurements: "
@@ -483,9 +457,15 @@ for filenames in filenamess:
         )
         log(output_file, "Number of distinct messages: " + str(numMsgs))
 
+        # Optional: log non-full packet message sizes (if necessary)
         # if nonFullPacketMsgSizes:
-        #     print("Non-Full Packet Message Sizes: ", nonFullPacketMsgSizes)
+        #     log(output_file, "Non-Full Packet Message Sizes: " + str(nonFullPacketMsgSizes))
 
+
+def compute_simulation_metrics(
+    filenames,
+    fileMsgCompletionTimesDict,
+):
     FileSimMsgSizes = []
     FileSimP50CompletionTimes = []
     FileSimP99CompletionTimes = []
@@ -493,12 +473,7 @@ for filenames in filenamess:
     FileSimP50SlowDowns = []
     FileSimP99SlowDowns = []
 
-    # Get slowdowns
-
     for i, filename in enumerate(filenames):
-        # print("\n", i, filename)
-        # log(output_file, "\n" + str(i) + " " + filename)
-
         SimMsgSizes = []
         SimP50CompletionTimes = []
         SimP99CompletionTimes = []
@@ -511,29 +486,17 @@ for filenames in filenamess:
 
             times = np.array(msgCompletionTimes)
             p50CompletionTime = np.percentile(times, 50)
-            SimP50CompletionTimes.append(p50CompletionTime)
             p99CompletionTime = np.percentile(times, 99)
-            SimP99CompletionTimes.append(p99CompletionTime)
 
-            totBytes = msgSize + math.ceil(msgSize / pktPayloadSize) * (hdrSize)
+            totBytes = msgSize + math.ceil(msgSize / pktPayloadSize) * hdrSize
             baseCompletionTime = totBytes * 8 / torBw
-            if msgSize > bdpPkts * pktPayloadSize:
-                baseCompletionTime += oneWayDel  # baseRtt
-            else:
-                baseCompletionTime += oneWayDel
-            #     baseCompletionTime = (msgSize+pktPayloadSize)*8.0/10e9 + 0.5e-6 \
-            #                           + 2*pktPayloadSize*8.0/40e9 + 0.5e-6
+            baseCompletionTime += oneWayDel
 
+            SimP50CompletionTimes.append(p50CompletionTime)
+            SimP99CompletionTimes.append(p99CompletionTime)
             SimBaseCompletionTimes.append(baseCompletionTime)
-
             SimP50SlowDowns.append(p50CompletionTime / baseCompletionTime)
             SimP99SlowDowns.append(p99CompletionTime / baseCompletionTime)
-
-        #     slowDowns = times / baseCompletionTime
-        #     slowDowns = np.where(slowDowns < 1.0, 1.0, slowDowns)
-
-        #     SimP50SlowDowns.append(np.percentile(slowDowns,50))
-        #     SimP99SlowDowns.append(np.percentile(slowDowns,99))
 
         zipData = sorted(
             zip(
@@ -546,12 +509,15 @@ for filenames in filenamess:
             )
         )
 
-        SimMsgSizes = np.array([x for x, _, _, _, _, _ in zipData])
-        SimP50CompletionTimes = np.array([x for _, x, _, _, _, _ in zipData])
-        SimP99CompletionTimes = np.array([x for _, _, x, _, _, _ in zipData])
-        SimBaseCompletionTimes = np.array([x for _, _, _, x, _, _ in zipData])
-        SimP50SlowDowns = np.array([x for _, _, _, _, x, _ in zipData])
-        SimP99SlowDowns = np.array([x for _, _, _, _, _, x in zipData])
+        # Unzipping the sorted data
+        (
+            SimMsgSizes,
+            SimP50CompletionTimes,
+            SimP99CompletionTimes,
+            SimBaseCompletionTimes,
+            SimP50SlowDowns,
+            SimP99SlowDowns,
+        ) = map(np.array, zip(*zipData))
 
         FileSimMsgSizes.append(SimMsgSizes)
         FileSimP50CompletionTimes.append(SimP50CompletionTimes)
@@ -560,64 +526,233 @@ for filenames in filenamess:
         FileSimP50SlowDowns.append(SimP50SlowDowns)
         FileSimP99SlowDowns.append(SimP99SlowDowns)
 
+    return (
+        FileSimMsgSizes,
+        FileSimP50CompletionTimes,
+        FileSimP99CompletionTimes,
+        FileSimBaseCompletionTimes,
+        FileSimP50SlowDowns,
+        FileSimP99SlowDowns,
+    )
+
+
+def find_max_msg_size(filenames, fileMsgCompletionTimesDict):
     maxSize = 0
     for i, filename in enumerate(filenames):
         # Get max size of each file
         for msgSize in fileMsgCompletionTimesDict[i].keys():
             if msgSize > maxSize:
                 maxSize = msgSize
+    return maxSize
+
+
+def log_slowdown_statistics(
+    filenames, FileSimP50SlowDowns, FileSimP99SlowDowns, output_file
+):
+    for i, filename in enumerate(filenames):
+        log(output_file, "\n" + str(i) + " " + filename)
+
+        # Log mean, standard deviation for 50% and 99% slowdowns
+        log(output_file, "50% slowdown mean: " + str(np.mean(FileSimP50SlowDowns[i])))
+        log(output_file, "99% slowdown mean: " + str(np.mean(FileSimP99SlowDowns[i])))
+        log(output_file, "50% slowdown std: " + str(np.std(FileSimP50SlowDowns[i])))
+        log(output_file, "99% slowdown std: " + str(np.std(FileSimP99SlowDowns[i])))
+
+
+def log_binned_slowdown_statistics(
+    filenames, FileSimMsgSizes, FileSimP50SlowDowns, FileSimP99SlowDowns, output_file
+):
+    # Initialize the result list with empty lists for each bin
+    res = [[] for _ in range(10)]
+
+    for i, filename in enumerate(filenames):
+        # Binning means for 50th and 99th percentiles
+        stats50 = stats.binned_statistic(
+            FileSimMsgSizes[i], FileSimP50SlowDowns[i], bins=10, statistic="mean"
+        ).statistic
+        stats99 = stats.binned_statistic(
+            FileSimMsgSizes[i], FileSimP99SlowDowns[i], bins=10, statistic="mean"
+        ).statistic
+
+        # Append binned statistics to the result list
+        for j, val in enumerate(stats50):
+            res[j].append(val)
+        for j, val in enumerate(stats99):
+            res[j].append(val)
+
+    # Log the binned statistics
+    header_str = "\n" + " ".join(filenames)
+    log(output_file, header_str)
+
+    # Log the 50th percentiles
+    log(output_file, "50th percentiles")
+    res_str_50 = "\n".join([f"{i}: {str(item[0::2])}" for i, item in enumerate(res)])
+    log(output_file, res_str_50)
+
+    # Log the 99th percentiles
+    log(output_file, "99th percentiles")
+    res_str_99 = "\n".join([f"{i}: {str(item[1::2])}" for i, item in enumerate(res)])
+    log(output_file, res_str_99)
+
+
+# Modify into a moving average to smooth plots
+def moving_average(data, window_size):
+    return pd.Series(data).rolling(window=window_size).mean()
+
+
+# Plot file on given ax
+def plot_file(
+    i,
+    ax,
+    fileAllMsgSizes,
+    FileSimMsgSizes,
+    fileMsgSizePercentiles,
+    FileSimP50SlowDowns,
+    FileSimP99SlowDowns,
+    window_size=50,
+    plot_avg=False,
+    only50=False,
+    only99=False,
+):
+    x = [
+        fileMsgSizePercentiles[i][np.where(fileAllMsgSizes[i] == msgsize)[0][0]]
+        for msgsize in FileSimMsgSizes[i]
+    ]
+    x = FileSimMsgSizes[i]
+    y50 = FileSimP50SlowDowns[i]
+    y99 = FileSimP99SlowDowns[i]
+
+    # Calculate moving averages
+    moving_avg_50 = moving_average(y50, window_size=window_size)
+    moving_avg_99 = moving_average(y99, window_size=window_size)
+
+    label = f"{file_bdp[i]} pkts"
+
+    plot_both = not only50 and not only99
+    if not plot_avg:
+        if only50 or plot_both:
+            ax.step(x, y50, label=f"{label} 50%", color=colors[i], linestyle="--")
+        if only99 or plot_both:
+            ax.step(x, y99, label=f"{label} 99%", color=colors[i])
+
+    # Plot moving averages
+    if plot_avg:
+        if only50 or plot_both:
+            ax.plot(x, moving_avg_50, label=f"{label} 50%", color=colors[i])
+        if only99 or plot_both:
+            ax.plot(x, moving_avg_99, label=f"{label} 99%", color=colors[i])
+
+    ax.spines["right"].set_visible(False)
+    ax.spines["top"].set_visible(False)
+
+
+for filenames in filenamess:
+    print("\nRunning: " + str(filenames))
+
+    # Analyze filenames
+    file_num_nodes, file_network_load, file_bdp = analyze_filenames(filenames)
+
+    # Set constants
+    NUM_NODES = file_num_nodes[0]
+    if NUM_NODES == 144:
+        NUM_SWITCHES = 9
+        NUM_SPINES = 4
+    elif NUM_NODES == 8:
+        NUM_SWITCHES = 2
+        NUM_SPINES = 1
+
+    # Create output file to append to
+    output_folder, output_file = prepare_output_file(
+        file_num_nodes, file_network_load, file_bdp
+    )
+
+    (
+        fileMsgStartEntryDict,
+        fileMsgCompletionTimesDict,
+        fileAllMsgSizes,
+        fileMsgSizePercentiles,
+        fileMsgCompletionTimesDictSameSwitch,
+        fileMsgCompletionTimesDictDiffSwitch,
+    ) = process_message_logs(filenames, NUM_SWITCHES)
+
+    log_message_counts(
+        filenames,
+        fileMsgCompletionTimesDictSameSwitch,
+        fileMsgCompletionTimesDictDiffSwitch,
+        output_file,
+    )
+
+    calculate_and_log_throughput(
+        filenames,
+        fileMsgCompletionTimesDictSameSwitch,
+        fileMsgCompletionTimesDictDiffSwitch,
+        output_file,
+        NUM_NODES,
+    )
+
+    # Basic stats
+    analyze_and_log_message_info(
+        filenames,
+        fileMsgStartEntryDict,
+        fileMsgCompletionTimesDict,
+        output_file,
+        pktPayloadSize,
+    )
+
+    # Compute slowdowns and store for plotting
+    (
+        FileSimMsgSizes,
+        FileSimP50CompletionTimes,
+        FileSimP99CompletionTimes,
+        FileSimBaseCompletionTimes,
+        FileSimP50SlowDowns,
+        FileSimP99SlowDowns,
+    ) = compute_simulation_metrics(filenames, fileMsgCompletionTimesDict)
+
+    log_slowdown_statistics(
+        filenames, FileSimP50SlowDowns, FileSimP99SlowDowns, output_file
+    )
+
+    log_binned_slowdown_statistics(
+        filenames,
+        FileSimMsgSizes,
+        FileSimP50SlowDowns,
+        FileSimP99SlowDowns,
+        output_file,
+    )
+
+    # Find max message size across all files
+    maxSize = find_max_msg_size(filenames, fileMsgCompletionTimesDict)
 
     # Create 10 xticks from 0 to maxsize
     xticks = np.arange(0, maxSize + 1, maxSize / 10)
 
-    def moving_average(data, window_size):
-        return pd.Series(data).rolling(window=window_size).mean()
-
-    def plot_file(i, ax, window_size=50, plot_avg=False, only50=False, only99=False):
-        x = [
-            fileMsgSizePercentiles[i][np.where(fileAllMsgSizes[i] == msgsize)[0][0]]
-            for msgsize in FileSimMsgSizes[i]
-        ]
-        x = FileSimMsgSizes[i]
-        y50 = FileSimP50SlowDowns[i]
-        y99 = FileSimP99SlowDowns[i]
-
-        # Calculate moving averages
-        moving_avg_50 = moving_average(y50, window_size=window_size)
-        moving_avg_99 = moving_average(y99, window_size=window_size)
-
-        label = f"{file_bdp[i]} pkts"
-
-        plot_both = not only50 and not only99
-        if not plot_avg:
-            if only50 or plot_both:
-                ax.step(x, y50, label=f"{label} 50%", color=colors[i], linestyle="--")
-            if only99 or plot_both:
-                ax.step(x, y99, label=f"{label} 99%", color=colors[i])
-
-        # Plot moving averages
-        if plot_avg:
-            if only50 or plot_both:
-                ax.plot(x, moving_avg_50, label=f"{label} 50%", color=colors[i])
-            if only99 or plot_both:
-                ax.plot(x, moving_avg_99, label=f"{label} 99%", color=colors[i])
-
-        ax.spines["right"].set_visible(False)
-        ax.spines["top"].set_visible(False)
-        # plt.tight_layout()
-
+    # Create plot
     fig, ax = plt.subplots(figsize=figsize)
     ax.set_ylabel("Slow Down")
     ax.set_xlabel("Message Size (Bytes)")
     ax.set_title(
-        f"Homa Message Completion Slowdown for {file_num_nodes[i]} Nodes with {file_network_load[i]*100}% Load"
+        f"Homa Message Completion Slowdown for {NUM_NODES} Nodes with {file_network_load[0]*100}% Load"
     )
     ax.grid(True, which="major", axis="both")
 
+    # Plot each file on the ax
     for i, filename in enumerate(filenames):
-        # print("\n", i, filename)
-        plot_file(i, ax, window_size=10, plot_avg=True)  # Pass the ax object here
+        plot_file(
+            i,
+            ax,
+            fileAllMsgSizes,
+            FileSimMsgSizes,
+            fileMsgSizePercentiles,
+            FileSimP50SlowDowns,
+            FileSimP99SlowDowns,
+            window_size=10,
+            plot_avg=True,
+            only50=False,
+            only99=False,
+        )
 
+    # Finish up plot
     ax.set_yscale("log")
     ax.set_ylim([1, 30])
     yticks = [1, 2, 3, 4, 5, 10, 20, 30]
@@ -631,62 +766,3 @@ for filenames in filenamess:
     plt.tight_layout()
     plt.savefig(f"{output_folder}/slowdown.png", dpi=300)
     # plt.show()
-
-    for i, filename in enumerate(filenames):
-        # print mean of 50% and 99% slowdowns
-        # print(i, filename)
-        log(output_file, "\n" + str(i) + " " + filename)
-
-        log(output_file, "50% slowdown mean: " + str(np.mean(FileSimP50SlowDowns[i])))
-        log(output_file, "99% slowdown mean: " + str(np.mean(FileSimP99SlowDowns[i])))
-        # log(output_file, "50% slowdown median: " + str(np.median(FileSimP50SlowDowns[i])))
-        # log(output_file, "99% slowdown median: " + str(np.median(FileSimP99SlowDowns[i])))
-        log(output_file, "50% slowdown std: " + str(np.std(FileSimP50SlowDowns[i])))
-        log(output_file, "99% slowdown std: " + str(np.std(FileSimP99SlowDowns[i])))
-        # log(output_file, "50% slowdown max: " + str(np.max(FileSimP50SlowDowns[i])))
-        # log(output_file, "99% slowdown max: " + str(np.max(FileSimP99SlowDowns[i])))
-        # log(output_file, "50% slowdown min: " + str(np.min(FileSimP50SlowDowns[i])))
-        # log(output_file, "99% slowdown min: " + str(np.min(FileSimP99SlowDowns[i])))
-
-    # Perform binned means, 10 bins
-
-    res = []
-    for _ in range(10):
-        res.append([])
-
-    for i, filename in enumerate(filenames):
-        # Binning means
-        # print(i, filename)
-
-        stats50 = stats.binned_statistic(
-            FileSimMsgSizes[i], FileSimP50SlowDowns[i], bins=10, statistic="mean"
-        ).statistic
-        stats99 = stats.binned_statistic(
-            FileSimMsgSizes[i], FileSimP99SlowDowns[i], bins=10, statistic="mean"
-        ).statistic
-
-        for j, val in enumerate(stats50):
-            res[j].append(val)
-        for j, val in enumerate(stats99):
-            res[j].append(val)
-
-    # Print i, val, val for each bin
-    header_str = "\n"
-    for filename in filenames:
-        # print(filename, end=" ")
-        header_str += filename + " "
-    log(output_file, header_str)
-
-    log(output_file, "50th percentiles")
-    res_str = ""
-    for i, item in enumerate(res):
-        # print(i, ":", item[0::2])
-        res_str += str(i) + ": " + str(item[0::2]) + "\n"
-    log(output_file, res_str)
-
-    log(output_file, "99th percentiles")
-    res_str = ""
-    for i, item in enumerate(res):
-        # print(i, ":", item[1::2])
-        res_str += str(i) + ": " + str(item[1::2]) + "\n"
-    log(output_file, res_str)

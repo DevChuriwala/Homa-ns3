@@ -39,7 +39,7 @@ Number of distinct messages: 35461
 50% slowdown std: 0.8966018989899921
 99% slowdown std: 3.4636151781124087
 
-trace/final_24hr_tests/MsgTraces_W5_load-100p_7_144_24h.tr trace/final_24hr_tests/MsgTraces_W5_load-100p_dynamic_144_24h.tr 
+trace/final_24hr_tests/MsgTraces_W5_load-100p_7_144_24h.tr trace/final_24hr_tests/MsgTraces_W5_load-100p_dynamic_144_24h.tr
 50th percentiles
 0: [4.363207771212192, 3.9544809440579445]
 1: [4.5491331339693675, 4.16713974802955]
@@ -51,7 +51,6 @@ trace/final_24hr_tests/MsgTraces_W5_load-100p_7_144_24h.tr trace/final_24hr_test
 7: [6.131221722498541, 6.282543501188214]
 8: [6.0319725322504665, 6.38784148648629]
 9: [6.724897511985228, 7.106645426732847]
-
 99th percentiles
 0: [7.112144815560308, 9.716373158834124]
 1: [7.995914403428232, 9.914679012559223]
@@ -63,4 +62,3 @@ trace/final_24hr_tests/MsgTraces_W5_load-100p_7_144_24h.tr trace/final_24hr_test
 7: [11.258067932937768, 14.576891989298483]
 8: [12.908562789134017, 14.765234006609965]
 9: [11.723131054104433, 17.083498269854996]
-
