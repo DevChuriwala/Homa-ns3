@@ -1,4 +1,3 @@
-import json
 import math
 import os
 
@@ -8,32 +7,15 @@ import pandas as pd
 from scipy import stats
 
 # Constants
-figsize = (10, 6)
-pktPayloadSize = 1460  # Bytes
-hdrSize = 40  # Bytes
-torBw = 10e9  # bps
-coreBw = 40e9  # bps
-oneWayDel = 1.0e-6 + (pktPayloadSize + hdrSize) * 8 * (2 / torBw + 2 / coreBw)
-baseRtt = oneWayDel + 1.0e-6 + 64 * 8 * (2 / torBw + 2 / coreBw)
-bdpPkts = 7
-saturationTime = 3.1
-
-
-def removeKey(d, key):
-    r = dict(d)
-    del r[key]
-    return r
-
-
-def getPctl(a, p):
-    i = int(len(a) * p)
-    return a[i]
-
-
-def log(filename, msg):
-    with open(filename, "a") as f:
-        f.write(msg + "\n")
-
+FIG_SIZE = (10, 6)
+PKT_PAYLOAD_SIZE = 1460  # Bytes
+HDR_SIZE = 40  # Bytes
+TOR_BW = 10e9  # bps
+CORE_BW = 40e9  # bps
+ONE_WAY_DEL = 1.0e-6 + (PKT_PAYLOAD_SIZE + HDR_SIZE) * 8 * (2 / TOR_BW + 2 / CORE_BW)
+# BASE_RTT = ONE_WAY_DEL + 1.0e-6 + 64 * 8 * (2 / TOR_BW + 2 / CORE_BW)
+# BDP_PKTS = 7
+SATURATION_TIME = 3.1
 
 # Final 24h runs
 filenamess = []
@@ -141,7 +123,7 @@ filenamess.append(
 # 8 nodes 7 vs Original 100
 
 
-colors = [
+COLORS = [
     "#E69F00",
     "#56B4E9",
     "#009E73",
@@ -151,6 +133,22 @@ colors = [
     "#CC79A7",
     "#000000",
 ]
+
+
+def removeKey(d, key):
+    r = dict(d)
+    del r[key]
+    return r
+
+
+def getPctl(a, p):
+    i = int(len(a) * p)
+    return a[i]
+
+
+def log(filename, msg):
+    with open(filename, "a") as f:
+        f.write(msg + "\n")
 
 
 # Verify filename matches format: trace/MsgTraces_W5_load-80p_7_8.tr
@@ -285,7 +283,7 @@ def process_message_logs(filenames, NUM_SWITCHES):
                             msgStartEntryDict = removeKey(msgStartEntryDict, key)
 
                         # Invalid
-                        if startTime < saturationTime:
+                        if startTime < SATURATION_TIME:
                             continue
 
                         # Valid
@@ -414,7 +412,6 @@ def analyze_and_log_message_info(
     fileMsgStartEntryDict,
     fileMsgCompletionTimesDict,
     output_file,
-    pktPayloadSize,
 ):
     for i, filename in enumerate(filenames):
         log(output_file, "\n" + str(i) + " " + filename)
@@ -446,8 +443,8 @@ def analyze_and_log_message_info(
             numMsgs += len(msgCompletionTimes)
 
             # Identify non-full packet message sizes
-            if msgSize % pktPayloadSize != 0:
-                nonFullPacketMsgSizes.append((msgSize, msgSize % pktPayloadSize))
+            if msgSize % PKT_PAYLOAD_SIZE != 0:
+                nonFullPacketMsgSizes.append((msgSize, msgSize % PKT_PAYLOAD_SIZE))
 
         # Log additional information
         log(
@@ -488,9 +485,9 @@ def compute_simulation_metrics(
             p50CompletionTime = np.percentile(times, 50)
             p99CompletionTime = np.percentile(times, 99)
 
-            totBytes = msgSize + math.ceil(msgSize / pktPayloadSize) * hdrSize
-            baseCompletionTime = totBytes * 8 / torBw
-            baseCompletionTime += oneWayDel
+            totBytes = msgSize + math.ceil(msgSize / PKT_PAYLOAD_SIZE) * HDR_SIZE
+            baseCompletionTime = totBytes * 8 / TOR_BW
+            baseCompletionTime += ONE_WAY_DEL
 
             SimP50CompletionTimes.append(p50CompletionTime)
             SimP99CompletionTimes.append(p99CompletionTime)
@@ -631,16 +628,16 @@ def plot_file(
     plot_both = not only50 and not only99
     if not plot_avg:
         if only50 or plot_both:
-            ax.step(x, y50, label=f"{label} 50%", color=colors[i], linestyle="--")
+            ax.step(x, y50, label=f"{label} 50%", color=COLORS[i], linestyle="--")
         if only99 or plot_both:
-            ax.step(x, y99, label=f"{label} 99%", color=colors[i])
+            ax.step(x, y99, label=f"{label} 99%", color=COLORS[i])
 
     # Plot moving averages
     if plot_avg:
         if only50 or plot_both:
-            ax.plot(x, moving_avg_50, label=f"{label} 50%", color=colors[i])
+            ax.plot(x, moving_avg_50, label=f"{label} 50%", color=COLORS[i])
         if only99 or plot_both:
-            ax.plot(x, moving_avg_99, label=f"{label} 99%", color=colors[i])
+            ax.plot(x, moving_avg_99, label=f"{label} 99%", color=COLORS[i])
 
     ax.spines["right"].set_visible(False)
     ax.spines["top"].set_visible(False)
@@ -696,7 +693,6 @@ for filenames in filenamess:
         fileMsgStartEntryDict,
         fileMsgCompletionTimesDict,
         output_file,
-        pktPayloadSize,
     )
 
     # Compute slowdowns and store for plotting
@@ -728,7 +724,7 @@ for filenames in filenamess:
     xticks = np.arange(0, maxSize + 1, maxSize / 10)
 
     # Create plot
-    fig, ax = plt.subplots(figsize=figsize)
+    fig, ax = plt.subplots(figsize=FIG_SIZE)
     ax.set_ylabel("Slow Down")
     ax.set_xlabel("Message Size (Bytes)")
     ax.set_title(
