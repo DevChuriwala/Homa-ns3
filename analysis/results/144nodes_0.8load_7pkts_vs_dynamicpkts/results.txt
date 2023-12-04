@@ -1,0 +1,66 @@
+
+0 trace/final_24hr_tests/MsgTraces_W5_load-80p_7_144_24h.tr
+Same switch msg count: 1091
+Different switch msg count: 18763
+
+1 trace/final_24hr_tests/MsgTraces_W5_load-80p_dynamic_144_24h.tr
+Same switch msg count: 1817
+Different switch msg count: 30885
+
+0 trace/final_24hr_tests/MsgTraces_W5_load-80p_7_144_24h.tr
+Same switch throughput: 6.828056698883959
+Different switch throughput: 8.695896673304013
+
+1 trace/final_24hr_tests/MsgTraces_W5_load-80p_dynamic_144_24h.tr
+Same switch throughput: 6.376499387623525
+Different switch throughput: 9.141767563404493
+
+0 trace/final_24hr_tests/MsgTraces_W5_load-80p_7_144_24h.tr
+Number of uncompleted messages: 536
+Number of distinct message sizes: 398
+Number of distinct message sizes that have multiple measurements: 384
+Number of distinct messages: 19854
+
+1 trace/final_24hr_tests/MsgTraces_W5_load-80p_dynamic_144_24h.tr
+Number of uncompleted messages: 639
+Number of distinct message sizes: 400
+Number of distinct message sizes that have multiple measurements: 399
+Number of distinct messages: 32702
+
+0 trace/final_24hr_tests/MsgTraces_W5_load-80p_7_144_24h.tr
+50% slowdown mean: 3.7338158235188916
+99% slowdown mean: 7.0455971388181196
+50% slowdown std: 0.8825897555625902
+99% slowdown std: 1.765473804795847
+
+1 trace/final_24hr_tests/MsgTraces_W5_load-80p_dynamic_144_24h.tr
+50% slowdown mean: 3.3924757073672684
+99% slowdown mean: 9.236371521138512
+50% slowdown std: 0.7872965456644483
+99% slowdown std: 3.4961179509155396
+
+trace/final_24hr_tests/MsgTraces_W5_load-80p_7_144_24h.tr trace/final_24hr_tests/MsgTraces_W5_load-80p_dynamic_144_24h.tr 
+50th percentiles
+0: [3.6255992174749334, 3.270347486618426]
+1: [3.808286506173859, 3.4693460017747895]
+2: [nan, nan]
+3: [3.923449646500496, 3.594748293903432]
+4: [4.086934638044426, 3.9334229945318153]
+5: [4.2446333135890155, 3.9657492323395176]
+6: [4.547273378904973, 4.213995626655343]
+7: [4.699394928093713, 4.555377039624028]
+8: [4.6811626108919455, 4.613104143711663]
+9: [5.404982707567916, 5.11686982173818]
+
+99th percentiles
+0: [6.722863740051034, 9.047009493821541]
+1: [7.420340777622113, 9.180815948062488]
+2: [nan, nan]
+3: [7.26076058181381, 9.183745758853375]
+4: [7.645026877532826, 9.366848597161782]
+5: [7.54081333850698, 9.461717064409044]
+6: [8.956830890251554, 9.207627566107718]
+7: [10.52213694739751, 11.38506335898917]
+8: [11.193227947700175, 12.745199951955756]
+9: [11.657152077592652, 13.3517771295491]
+
