@@ -19,6 +19,22 @@ SATURATION_TIME = 3.1
 
 # Final 24h runs
 filenamess = []
+
+# 144 nodes 7 vs DynamicPayload 80
+filenamess.append(
+    [
+        "trace/final_24hr_tests/MsgTraces_W5_load-80p_7_144_24h.tr",
+        "trace/final_24hr_tests/MsgTraces_W5_load-80p_dynamicpayload_144_24h.tr",
+    ]
+)
+# 144 nodes 7 vs DynamicPayload 100
+filenamess.append(
+    [
+        "trace/final_24hr_tests/MsgTraces_W5_load-100p_7_144_24h.tr",
+        "trace/final_24hr_tests/MsgTraces_W5_load-100p_dynamicpayload_144_24h.tr",
+    ]
+)
+
 # 144 nodes 7 vs Dynamic 50
 filenamess.append(
     [
@@ -262,7 +278,7 @@ def process_message_logs(filenames, NUM_SWITCHES):
                 key = (sender, receiver, txMsgId, i)
 
                 # Skip warmup messages
-                if msgSize == 10:
+                if msgSize == 10 or msgSize == 8:
                     continue
 
                 # Sender
